@@ -1,0 +1,18 @@
+# Gradle
+.gradle/
+build/
+
+# Ausgabe des Reports
+out/
+
+# IDE
+.idea/
+*.iml
+.vscode/
+.settings/
+.classpath
+.project
+
+# OS
+Thumbs.db
+.DS_Store

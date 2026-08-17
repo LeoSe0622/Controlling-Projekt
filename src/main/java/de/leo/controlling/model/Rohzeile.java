@@ -1,0 +1,31 @@
+package de.leo.controlling.model;
+
+/**
+ * Eine Zeile der Rohdaten-CSV — unverändert so, wie sie in der Datei stand.
+ *
+ * <p>Bewusst sind ALLE Datenfelder {@code String}: In dieser Stufe wird nichts geparst
+ * und nichts geprüft. Zeile 22 der CSV hat ein leeres {@code ist_menge}. Würden wir hier
+ * schon ein {@code BigDecimal} daraus machen, würde das Programm an dieser Zeile
+ * abstürzen — und wir könnten hinterher nicht mehr berichten, WO und WAS kaputt war.
+ * Genau das ist aber der Zweck des Projekts.
+ *
+ * <p>Das Parsen in echte Zahlen passiert später, nach der Validierung, in einer eigenen
+ * Klasse {@code Datenzeile}.
+ *
+ * @param zeilennummer 1-basiert wie im Editor: Kopfzeile = 1, erste Datenzeile = 2.
+ *                     Kein Wert aus der CSV, sondern Herkunftsinformation für
+ *                     Fehlermeldungen ("Zeile 22, Feld istMenge, war leer").
+ */
+public record Rohzeile(
+        int zeilennummer,
+        String monat,
+        String produkt,
+        String kostenstelle,
+        String planMenge,
+        String istMenge,
+        String planPreis,
+        String istPreis,
+        String variableStueckkosten,
+        String fixkostenProdukt
+) {
+}
