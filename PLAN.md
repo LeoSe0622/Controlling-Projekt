@@ -108,17 +108,35 @@ Originalwert und Klartextmeldung.
 | V05 | negative Menge / negativer Preis / negative Kosten | FEHLER |
 | V06 | `variable_stueckkosten >= preis` → negativer Stück-DB | WARNUNG |
 
+| V08 | Ausreißer: Ist-Menge oder Ist-Preis weicht > 50 % vom Plan ab | WARNUNG |
+
 **Datensatz-Regeln** (brauchen alle Zeilen):
 
 | ID | Regel | Grad |
 |---|---|---|
 | V07 | Dublette: `monat + produkt + kostenstelle` doppelt | FEHLER (beide Zeilen raus) |
-| V08 | Ausreißer: Ist-Menge oder Ist-Preis weicht > 50 % vom Plan ab | WARNUNG |
 
 Gegenüber der ersten Fassung entfallen die Regeln zu `szenario` und zu Plan/Ist-Waisen —
-im Wide-Format kann es sie nicht geben.
+im Wide-Format kann es sie nicht geben. **V08 ist eine Zeilenregel**, keine Datensatzregel:
+Plan und Ist stehen im Wide-Format nebeneinander in derselben Zeile, die Regel braucht die
+übrigen Zeilen nicht.
 
-### 2.3 Struktur
+### 2.3 Der Schweigegrundsatz
+
+Auf Zeile 14 (`istPreis = -77.05`) könnten drei Regeln anspringen: V05 (negativ),
+V06 (Kosten > Preis) und V08 (196 % Abweichung). Das wären drei Befunde für **ein**
+Problem — der Bericht würde unlesbar, und es wäre unklar, was zu reparieren ist.
+
+> **Jede Regel prüft genau ein Thema und schweigt, wenn ihre Eingabe für dieses Thema
+> unbrauchbar ist.**
+
+- Feld leer → nur V02 meldet; V03 und V05 schweigen.
+- Feld nicht parsebar → nur V03 meldet; V05, V06, V08 schweigen.
+- Feld negativ → V05 meldet; V06 und V08 rechnen damit nicht weiter.
+
+Damit bekommt jede kaputte Stelle genau einen Befund — den, der die Ursache benennt.
+
+### 2.4 Struktur
 
 ```java
 public interface Zeilenregel    { List<Befund> pruefe(Rohzeile zeile); }
@@ -132,9 +150,32 @@ Der `Validator` hält zwei Listen von Regeln und liefert ein `Pruefprotokoll` mi
 `befunde()`, `verwertbareZeilen()` und `qualitaetsquote()`.
 Neue Regel = neue Klasse + eine Zeile in der Registry. Kein `if`-Monster.
 
-### 2.4 Definition of Done
+Die Regel-ID steht als Konstante *in* der Regelklasse, nicht im Klassennamen: IDs ändern
+sich beim Umsortieren, der Name beschreibt dauerhaft, was geprüft wird.
 
-- Alle 6 eingebauten Fehler aus 1.3 werden gefunden, mit der richtigen Regel-ID.
+### 2.5 Erwartete Befunde auf `controlling_rohdaten.csv`
+
+Das ist das Akzeptanzkriterium der Phase — nicht mehr und nicht weniger:
+
+| CSV-Zeile | Regel | Grad | Befund |
+|---|---|---|---|
+| 22 | V02 | FEHLER | `istMenge` ist leer |
+| 30 | V02 | FEHLER | `istMenge` ist leer |
+| 32 | V02 | FEHLER | `istMenge` ist leer |
+| 14 | V05 | FEHLER | `istPreis` negativ (−77.05) |
+| 6 | V07 | FEHLER | Dublette zu Zeile 21 |
+| 21 | V07 | FEHLER | Dublette zu Zeile 6 |
+| 46 | V08 | WARNUNG | `istMenge` 17950 weicht 5028 % von Plan 350 ab |
+
+**7 Befunde · 6 Zeilen mit FEHLER · 43 verwertbare Zeilen · Qualitätsquote 87,8 %**
+
+Zeile 46 bleibt in der Rechnung (nur Warnung) und verzerrt die Kennzahlen sichtbar — das
+ist gewollt: Ein Controller soll den Ausreißer sehen, nicht eine stillschweigend geglättete
+Zahl.
+
+### 2.6 Definition of Done
+
+- Genau die 7 Befunde aus 2.5 werden gefunden, mit der richtigen Regel-ID.
 - Keine Falsch-Positiven auf den übrigen Zeilen.
 - Ein Unit-Test pro Regel: ein gutes und ein schlechtes Beispiel.
 

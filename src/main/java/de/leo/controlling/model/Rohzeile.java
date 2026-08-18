@@ -12,12 +12,17 @@ package de.leo.controlling.model;
  * <p>Das Parsen in echte Zahlen passiert später, nach der Validierung, in einer eigenen
  * Klasse {@code Datenzeile}.
  *
- * @param zeilennummer 1-basiert wie im Editor: Kopfzeile = 1, erste Datenzeile = 2.
- *                     Kein Wert aus der CSV, sondern Herkunftsinformation für
- *                     Fehlermeldungen ("Zeile 22, Feld istMenge, war leer").
+ * @param zeilennummer  1-basiert wie im Editor: Kopfzeile = 1, erste Datenzeile = 2.
+ *                      Kein Wert aus der CSV, sondern Herkunftsinformation für
+ *                      Fehlermeldungen ("Zeile 22, Feld istMenge, war leer").
+ * @param spaltenAnzahl wie viele Spalten die Zeile tatsächlich hatte (erwartet: 9).
+ *                      Der Einleser füllt fehlende Spalten mit "" auf, damit nichts
+ *                      abstürzt — dadurch wäre sonst nicht mehr unterscheidbar, ob ein
+ *                      Feld leer war oder ganz gefehlt hat. Regel V01 braucht das.
  */
 public record Rohzeile(
         int zeilennummer,
+        int spaltenAnzahl,
         String monat,
         String produkt,
         String kostenstelle,

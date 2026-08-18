@@ -42,6 +42,7 @@ public class CsvEinleser {
 
             ergebnis.add(new Rohzeile(
                     i + 1,
+                    felder.length,
                     feld(felder, 0),
                     feld(felder, 1),
                     feld(felder, 2),
