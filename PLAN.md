@@ -107,7 +107,6 @@ Originalwert und Klartextmeldung.
 | V04 | `monat` nicht `YYYY-MM` oder Monat außerhalb 01–12 | FEHLER |
 | V05 | negative Menge / negativer Preis / negative Kosten | FEHLER |
 | V06 | `variable_stueckkosten >= preis` → negativer Stück-DB | WARNUNG |
-
 | V08 | Ausreißer: Ist-Menge oder Ist-Preis weicht > 50 % vom Plan ab | WARNUNG |
 
 **Datensatz-Regeln** (brauchen alle Zeilen):
@@ -205,9 +204,16 @@ Auf Gesamtebene fürs Deckblatt: `Betriebsergebnis = Σ DB II`.
 
 ```java
 public record Deckungsbeitrag(
-    BigDecimal umsatz, BigDecimal variableKosten,
-    BigDecimal dbEins, BigDecimal dbEinsJeStueck, BigDecimal dbEinsMarge,
-    BigDecimal produktfixkosten, BigDecimal dbZwei, BigDecimal dbZweiMarge) {}
+    BigDecimal menge, BigDecimal umsatz, BigDecimal variableKosten,
+    BigDecimal dbEins, BigDecimal fixkosten, BigDecimal dbZwei) {
+
+    // Abgeleitete Kennzahlen sind METHODEN, keine Komponenten - so kann
+    // niemand einen Deckungsbeitrag bauen, dessen Marge nicht zum DB I passt.
+    BigDecimal dbEinsJeStueck();   // null wenn Menge = 0
+    BigDecimal dbEinsMarge();      // null wenn Umsatz = 0
+    BigDecimal dbZweiMarge();
+    BigDecimal breakEvenMenge();   // null wenn Stueck-DB <= 0; sonst aufgerundet
+}
 ```
 
 Reine Funktionen, keine I/O, kein Zustand — dadurch trivial testbar.

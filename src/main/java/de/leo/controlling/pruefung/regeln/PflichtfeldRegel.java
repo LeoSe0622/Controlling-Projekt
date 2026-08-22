@@ -56,7 +56,7 @@ public class PflichtfeldRegel implements Zeilenregel {
             ID,
             Schweregrad.Grad.Fehler,
             wert,
-            "Pflichtfeld:" + feldname + "ist leer"
+            "Pflichtfeld '" + feldname + "' ist leer"
         ));    
         }
         

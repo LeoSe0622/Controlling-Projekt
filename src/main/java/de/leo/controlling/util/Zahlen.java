@@ -27,25 +27,14 @@ public final class Zahlen {
      */
     public static BigDecimal parse(String text) {
 
-        // TODO 1: null und leer/blank -> null zurueckgeben.
-        //         Kein Befund, keine Exception: "ist keine Zahl" ist eine gueltige Antwort.
         if ( text == null || text.isBlank() ) {
             return null;
         }
-        // TODO 2: Versuchen, den Text in ein BigDecimal zu wandeln:
-        //
         try {
            return new BigDecimal(text.trim());
          } catch (NumberFormatException e) {
          return null;
          }
         
-        //         Hier ist trim() richtig — anders als im CsvEinleser. Der Einleser
-        //         bewahrt den Rohzustand, DIESE Stufe interpretiert ihn. " 2000 " ist
-        //         inhaltlich die Zahl 2000.
-        //
-        //         Hinweis zum Format: Deine CSV nutzt den Punkt als Dezimaltrennzeichen
-        //         ("26.54"), genau das erwartet BigDecimal. Bei deutschem Format
-        //         ("26,54") muesste hier zusaetzlich das Komma ersetzt werden.
     }
 }
