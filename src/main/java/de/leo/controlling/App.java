@@ -1,5 +1,9 @@
 package de.leo.controlling;
 
+import de.leo.controlling.abweichung.Abweichung;
+import de.leo.controlling.abweichung.AbweichungsRechner;
+import de.leo.controlling.abweichung.Ampel;
+import de.leo.controlling.abweichung.Wesentlichkeit;
 import de.leo.controlling.io.CsvEinleser;
 import de.leo.controlling.model.Datenzeile;
 import de.leo.controlling.model.Rohzeile;
@@ -11,8 +15,10 @@ import de.leo.controlling.rechnung.ProduktRechner;
 import de.leo.controlling.rechnung.Produktergebnis;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Einstiegspunkt. Verdrahtet die Pipeline:
@@ -111,6 +117,60 @@ public class App {
             }
 
 
+            // ---------- Abweichungsanalyse ----------
+
+            Map<String, Abweichung> abweichungen = new AbweichungsRechner().jeProdukt(daten);
+
+            // Die Schwellen, ab denen eine Abweichung auffaellig ist.
+            // In Phase 7 kommen dafuer --schwelle-eur und --schwelle-prozent dazu.
+            Wesentlichkeit wesentlichkeit = Wesentlichkeit.standard();
+
+            System.out.println();
+            System.out.printf("%-12s %15s %15s %15s %15s %6s%n",
+                    "Produkt", "Preis", "Menge", "Misch", "Gesamt", "Ampel");
+            System.out.println("-".repeat(83));
+
+            for (Produktergebnis e : ergebnisse) {
+                Abweichung a = abweichungen.get(e.produkt());
+
+                // Bezugsgroesse ist der PLAN-DB-II: Gemessen wird gegen das, was man
+                // sich vorgenommen hatte. Mit dem Ist-Wert als Nenner wuerde ein
+                // eingebrochenes Produkt seine eigene Abweichung kleinrechnen.
+                Ampel ampel = wesentlichkeit.bewerte(a.gesamt(), e.plan().dbZwei());
+
+                System.out.printf("%-12s %15s %15s %15s %15s %6s%n",
+                        e.produkt(),
+                        geld(a.preisabweichung()),
+                        geld(a.mengenabweichung()),
+                        geld(a.mischabweichung()),
+                        geld(a.gesamt()),
+                        ampelText(ampel));
+            }
+
+            Abweichung gesamt = new AbweichungsRechner()
+                    .summe(List.copyOf(abweichungen.values()));
+
+            System.out.println("-".repeat(83));
+            System.out.printf("%-12s %15s %15s %15s %15s %6s%n", "GESAMT",
+                    geld(gesamt.preisabweichung()),
+                    geld(gesamt.mengenabweichung()),
+                    geld(gesamt.mischabweichung()),
+                    geld(gesamt.gesamt()),
+                    "");
+            System.out.println();
+
+            BigDecimal ausZerlegung = gesamt.gesamt();
+            BigDecimal ausDb = gesamtIst.dbZwei().subtract(gesamtPlan.dbZwei());
+            BigDecimal differenz = ausZerlegung.subtract(ausDb);
+
+            if(differenz.signum() == 0){
+                System.out.println("Abstimmbruecke: geht auf.");
+            } else {
+                System.out.println("ACHTUNG - Abstimmbruecke geht NICHT auf."
+                        + " Differenz: " + geld(differenz));
+
+            }
+
             if (protokoll.anzahlFehler() > 0) {
                 System.exit(2);
             } else if (protokoll.anzahlWarnungen() > 0) {
@@ -130,6 +190,22 @@ public class App {
      * <p>%,.2f nutzt die Landeseinstellung des Rechners - bei dir also
      * "52.414,70" mit Punkt als Tausendertrenner und Komma als Dezimaltrenner.
      */
+    /**
+     * Textdarstellung der Ampel fuer die Konsole.
+     *
+     * <p>Bewusst keine Emoji: Die Windows-Konsole stellt sie je nach Codepage
+     * als Kaestchen dar. Im Excel wird daraus spaeter echte Zellenfarbe - dort
+     * faellt die Einschraenkung weg.
+     */
+    private static String ampelText(Ampel ampel) {
+
+        return switch (ampel) {
+            case GRUEN -> "[ok]";
+            case GELB -> "[!]";
+            case ROT -> "[!!]";
+        };
+    }
+
     private static String geld(java.math.BigDecimal betrag) {
         return String.format("%,.2f", betrag);
     }

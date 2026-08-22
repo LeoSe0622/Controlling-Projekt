@@ -376,3 +376,59 @@ Abweichungsanalyse, obwohl der CSV-Parser das Komma falsch liest.
 
 Datenbank statt CSV · mehrstufige Fixkostendeckung über Produktgruppen (DB III/IV) ·
 Forecast/Hochrechnung · PDF-Ausgabe · Web-Frontend · Mehrwährungsfähigkeit
+
+---
+
+## 9. Bedienung — Phase 8, nach der eigentlichen Fertigstellung
+
+Zielbild: **CSV auf ein Symbol ziehen → Bericht entsteht → Excel öffnet sich.**
+Kein Terminal-Befehl, kein Ablegen der Datei an einer bestimmten Stelle.
+
+Phase 7 liefert davon bereits die Grundlage (`--input` als Argument). Was danach noch fehlt,
+ist erstaunlich wenig:
+
+### 9.1 Drag & Drop ohne GUI
+
+Zieht man unter Windows eine Datei auf eine `.bat`-Datei, übergibt Windows deren Pfad
+automatisch als erstes Argument. Das ist exakt der `--input`-Mechanismus aus Phase 7 —
+nur anders ausgelöst. Es braucht also **kein Fenster und kein GUI-Framework**:
+
+```bat
+@echo off
+java -jar controlling-report.jar --input %1
+pause
+```
+
+`%1` ist der Pfad der fallen gelassenen Datei. `pause` hält das Fenster offen, damit man
+Befunde und Fehlermeldungen lesen kann.
+
+Voraussetzung: ein ausführbares JAR statt `gradle run`. Das liefert Gradle mit
+`gradle installDist` oder dem `shadow`-Plugin (alle Abhängigkeiten in einem JAR — nötig,
+weil Apache POI dazukommt).
+
+### 9.2 Report automatisch öffnen
+
+```java
+if (Desktop.isDesktopSupported()) {
+    Desktop.getDesktop().open(ausgabedatei.toFile());
+}
+```
+
+Die Abfrage ist Pflicht: Auf einem Server ohne grafische Oberfläche gibt es kein Desktop,
+und ohne Prüfung fliegt eine `HeadlessException`. Bei Exit-Code 3 (Datei unlesbar) darf
+nichts geöffnet werden — dann existiert kein Bericht.
+
+### 9.3 Ausgabepfad ableiten
+
+Wenn nur `--input` kommt, sollte der Bericht **neben der Eingabedatei** landen, nicht im
+Arbeitsverzeichnis des Programms:
+`daten\maerz.csv` → `daten\maerz_Monatsbericht.xlsx`.
+Beim Reinziehen ist das Arbeitsverzeichnis sonst irgendein Windows-Systemordner.
+
+### 9.4 Wenn es doch ein Fenster sein soll
+
+Eine echte Drop-Zone (Swing/JavaFX mit `TransferHandler`) wäre eine eigene Phase. Der
+Batch-Weg oben deckt denselben Bedienwunsch mit rund fünf Zeilen ab — deshalb zuerst der.
+
+**Reihenfolge:** Erst Phase 4–7 fertigstellen. Ohne Excel-Report gibt es nichts zu öffnen,
+und ohne `--input` nichts, worauf man ziehen könnte.

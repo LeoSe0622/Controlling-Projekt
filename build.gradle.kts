@@ -7,7 +7,10 @@ repositories {
 }
 
 dependencies {
-    // Tests. Apache POI (Excel) kommt erst in Phase 5 dazu.
+    // Excel-Ausgabe
+    implementation("org.apache.poi:poi-ooxml:5.4.1")
+
+    // Tests
     testImplementation("org.junit.jupiter:junit-jupiter:5.11.4")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
