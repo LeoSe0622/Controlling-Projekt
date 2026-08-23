@@ -43,16 +43,16 @@ class DublettenRegelTest {
         assertEquals(2, befunde.size());
 
         for (Befund b : befunde) {
-            assertEquals("V07", b.regeId());
-            assertEquals(Schweregrad.Grad.Fehler, b.grad());
+            assertEquals("V07", b.regelId());
+            assertEquals(Schweregrad.FEHLER, b.grad());
         }
 
         // Beide beteiligten Zeilen sind dabei - in der Reihenfolge der Datei.
-        assertEquals(6, befunde.get(0).Zeilennummer());
-        assertEquals(21, befunde.get(1).Zeilennummer());
+        assertEquals(6, befunde.get(0).zeilennummer());
+        assertEquals(21, befunde.get(1).zeilennummer());
 
         // Zeile 10 ist eindeutig und darf keinen Befund bekommen.
-        assertTrue(befunde.stream().noneMatch(b -> b.Zeilennummer() == 10),
+        assertTrue(befunde.stream().noneMatch(b -> b.zeilennummer() == 10),
                 "die eindeutige Zeile 10 darf nicht gemeldet werden");
     }
 

@@ -17,6 +17,17 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 class ValidatorTest {
 
+    @Test
+    void leereDateiHatVolleQualitaet() {
+        // gepruefteZeilen == 0 waere eine Division durch null. 1.0 ist die
+        // sinnvollere Antwort als ein Absturz: Es gibt nichts Kaputtes.
+        Pruefprotokoll leer = validator.pruefe(List.of());
+
+        assertEquals(1.0, leer.qualitaetsquote(), 0.001);
+        assertEquals(0, leer.gepruefteZeilen());
+        assertTrue(leer.befunde().isEmpty());
+    }
+
     private final Validator validator = new Validator();
 
     @Test
@@ -46,7 +57,7 @@ class ValidatorTest {
         Pruefprotokoll protokoll = validator.pruefe(alle);
 
         assertEquals(1, protokoll.befunde().size());
-        assertEquals("V02", protokoll.befunde().get(0).regeId());
+        assertEquals("V02", protokoll.befunde().get(0).regelId());
         assertEquals(1, protokoll.anzahlFehler());
         assertEquals(0, protokoll.anzahlWarnungen());
 
@@ -69,8 +80,8 @@ class ValidatorTest {
         Pruefprotokoll protokoll = validator.pruefe(alle);
 
         assertEquals(1, protokoll.befunde().size());
-        assertEquals("V08", protokoll.befunde().get(0).regeId());
-        assertEquals(Schweregrad.Grad.Warnung, protokoll.befunde().get(0).grad());
+        assertEquals("V08", protokoll.befunde().get(0).regelId());
+        assertEquals(Schweregrad.WARNUNG, protokoll.befunde().get(0).grad());
 
         assertEquals(0, protokoll.anzahlFehler());
         assertEquals(1, protokoll.anzahlWarnungen());
@@ -92,7 +103,7 @@ class ValidatorTest {
         Pruefprotokoll protokoll = validator.pruefe(alle);
 
         assertEquals(2, protokoll.anzahlFehler(), "beide Dublettenzeilen werden gemeldet");
-        assertTrue(protokoll.befunde().stream().allMatch(b -> b.regeId().equals("V07")));
+        assertTrue(protokoll.befunde().stream().allMatch(b -> b.regelId().equals("V07")));
 
         // Nur die eindeutige Zeile 10 bleibt uebrig.
         assertEquals(1, protokoll.verwertbareZeilen().size());
@@ -113,7 +124,7 @@ class ValidatorTest {
 
         assertEquals(1, protokoll.befunde().size(),
                 "V06 und V08 muessen bei einem negativen Preis schweigen");
-        assertEquals("V05", protokoll.befunde().get(0).regeId());
+        assertEquals("V05", protokoll.befunde().get(0).regelId());
         assertEquals("istPreis", protokoll.befunde().get(0).feld());
     }
 

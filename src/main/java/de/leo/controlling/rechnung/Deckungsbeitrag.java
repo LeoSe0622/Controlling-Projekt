@@ -71,27 +71,20 @@ public record Deckungsbeitrag(
 
         BigDecimal stueckDb = dbEinsJeStueck();
 
-        // Kein Stueck-DB (Menge war 0) -> kein Break-Even.
         if (stueckDb == null) {
             return null;
         }
 
-        // Stueck-DB <= 0: Es gibt keine Menge, ab der sich das Produkt traegt.
-        // Mehr zu verkaufen macht es schlimmer. Eine Zahl waere hier eine
-        // Falschaussage.
         if (stueckDb.signum() <= 0) {
             return null;
         }
 
-        // CEILING statt HALF_UP: Die Frage lautet "wie viele brauche ich
-        // MINDESTENS". Bei 153,2 benoetigten Stueck reichen 153 nicht.
         return fixkosten.divide(stueckDb, 0, RoundingMode.CEILING);
     }
 
     /** DB-II-Marge, analog zu {@link #dbEinsMarge()}. */
     public BigDecimal dbZweiMarge() {
 
-        // TODO 3: analog
         if (umsatz.signum() == 0) {
             return null;
         }

@@ -38,6 +38,16 @@ public record Wesentlichkeit(BigDecimal schwelleEuro, BigDecimal schwelleProzent
      * ist genauso erklaerungsbeduerftig wie ein unerwarteter Verlust — und oft genug ein
      * Datenfehler.
      *
+     * <p>Die Reihenfolge der Pruefung ist nicht beliebig: ROT muss zuerst stehen, sonst
+     * faengt die GELB-Bedingung mit ihrem ODER saemtliche roten Faelle vorher ab - der
+     * Code uebersetzt, fast alle Tests bleiben gruen, und der Bericht meldet nie
+     * Handlungsbedarf.
+     *
+     * <p>Beim Prozentkriterium steht {@code abs()} auf BEIDEN Seiten der Division. Bei
+     * einem negativen Planwert - einem Produkt, das planmaessig Verlust macht - waere der
+     * Quotient sonst negativ und der Vergleich immer falsch; die Prozent-Schwelle wuerde
+     * stillschweigend nie greifen.
+     *
      * @param abweichung Ist minus Plan; "+" heisst ergebnisverbessernd
      * @param planwert   Bezugsgroesse fuer den Prozentsatz (der Plan-DB II)
      */
@@ -45,7 +55,6 @@ public record Wesentlichkeit(BigDecimal schwelleEuro, BigDecimal schwelleProzent
 
         boolean euroUeberschritten = abweichung.abs().compareTo(schwelleEuro) > 0;
 
-        
         boolean prozentUeberschritten = false;
         if (planwert.signum() != 0) {
             BigDecimal anteil = abweichung.abs()

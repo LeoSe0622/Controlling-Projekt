@@ -37,19 +37,16 @@ public class ZahlformatRegel implements Zeilenregel {
 
     private static void pruefeFeld(Rohzeile zeile, String feldname, String wert, List<Befund> befunde) {
 
-        // Schweigegrundsatz: leere Pflichtfelder sind V02s Thema, nicht unseres.
         if (wert == null || wert.isBlank()) {
             return;
         }
 
-        // Wir parsen nicht selbst - wir fragen Zahlen.parse() und deuten die Antwort.
-        // null bedeutet: war keine gueltige Zahl.
         if (Zahlen.parse(wert) == null) {
             befunde.add(new Befund(
                     zeile.zeilennummer(),
                     feldname,
                     ID,
-                    Schweregrad.Grad.Fehler,
+                    Schweregrad.FEHLER,
                     wert,
                     "Feld '" + feldname + "' ist keine gueltige Zahl"
             ));

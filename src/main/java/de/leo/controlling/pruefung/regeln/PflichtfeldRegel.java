@@ -36,8 +36,6 @@ public class PflichtfeldRegel implements Zeilenregel {
         pruefeFeld(zeile, "variableStueckkosten", zeile.variableStueckkosten(), befunde);
         pruefeFeld(zeile, "fixkostenProdukt", zeile.fixkostenProdukt(), befunde);
         
-        
-        
         return befunde;
     }
 
@@ -54,7 +52,7 @@ public class PflichtfeldRegel implements Zeilenregel {
             zeile.zeilennummer(),
             feldname,
             ID,
-            Schweregrad.Grad.Fehler,
+            Schweregrad.FEHLER,
             wert,
             "Pflichtfeld '" + feldname + "' ist leer"
         ));    

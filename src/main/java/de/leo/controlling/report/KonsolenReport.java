@@ -38,8 +38,6 @@ public final class KonsolenReport {
     private void kopf(Berichtsmodell m) {
         System.out.println("Eingelesen: " + m.alleZeilen().size()
                 + " Rohzeilen aus " + m.quelle());
-        // Der Zeitstempel gehoert in jeden Bericht - sonst weiss in drei Monaten
-        // niemand mehr, welcher Datenstand das war.
         System.out.println("Erstellt:   " + m.erstelltAm().format(ZEITSTEMPEL));
         System.out.println();
     }
@@ -47,7 +45,7 @@ public final class KonsolenReport {
     private void datenqualitaet(Berichtsmodell m) {
         for (Befund b : m.protokoll().befunde()) {
             System.out.printf("  Zeile %-3d  %-8s  %-22s  %s%n",
-                    b.Zeilennummer(), b.regeId(), b.feld(), b.meldung());
+                    b.zeilennummer(), b.regelId(), b.feld(), b.meldung());
         }
 
         System.out.println();
@@ -75,8 +73,6 @@ public final class KonsolenReport {
                     geld(e.dbZweiAbweichung()));
         }
 
-        // Summenzeile: Betriebsergebnis ueber alle Produkte. Nur die Geldbetraege -
-        // eine summierte Menge ueber verschiedene Produkte hinweg waere bedeutungslos.
         System.out.println("-".repeat(70));
         System.out.printf("%-12s %8s %15s %15s %15s%n",
                 "GESAMT", "",
@@ -84,9 +80,6 @@ public final class KonsolenReport {
                 geld(m.gesamtIst().dbZwei()),
                 geld(m.gesamtIst().dbZwei().subtract(m.gesamtPlan().dbZwei())));
 
-        // Ein Hinweis JE betroffenem Produkt. Eine Sammelmeldung ("3 Produkte betroffen")
-        // schickt den Leser zurueck in die Tabelle, um selbst zu suchen - genau die
-        // Arbeit, die der Bericht ihm abnehmen soll.
         if (!m.unvollstaendigeProdukte().isEmpty()) {
             System.out.println();
             for (Produktergebnis e : m.unvollstaendigeProdukte()) {
@@ -113,8 +106,6 @@ public final class KonsolenReport {
                     geld(a.mengenabweichung()),
                     geld(a.mischabweichung()),
                     geld(a.gesamt()),
-                    // "Welche Stufe" beantwortet das Modell - hier bleibt nur,
-                    // wie sie aussieht.
                     ampelText(m.ampelFuer(e)));
         }
 

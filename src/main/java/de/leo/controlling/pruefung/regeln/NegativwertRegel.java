@@ -41,8 +41,6 @@ public class NegativwertRegel implements Zeilenregel {
 
     private static void pruefeFeld(Rohzeile zeile, String feldname, String wert, List<Befund> befunde) {
 
-        // Schweigegrundsatz in einer Zeile: Zahlen.parse() liefert sowohl bei leer
-        // (V02s Thema) als auch bei "keine Zahl" (V03s Thema) null.
         BigDecimal zahl = Zahlen.parse(wert);
         if (zahl == null) {
             return;
@@ -53,7 +51,7 @@ public class NegativwertRegel implements Zeilenregel {
                     zeile.zeilennummer(),
                     feldname,
                     ID,
-                    Schweregrad.Grad.Fehler,
+                    Schweregrad.FEHLER,
                     wert,
                     "Feld '" + feldname + "' ist negativ (" + wert + ")"
             ));

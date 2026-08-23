@@ -90,8 +90,6 @@ public final class ProduktRechner {
      */
     public List<Monatsergebnis> jeProduktUndMonat(List<Datenzeile> zeilen) {
 
-        // Verschachtelte TreeMap: aussen Produkt (alphabetisch), innen Monat
-        // (chronologisch - YearMonth ist von sich aus vergleichbar).
         Map<String, Map<YearMonth, List<Datenzeile>>> gruppen = new TreeMap<>();
         for (Datenzeile z : zeilen) {
             gruppen.computeIfAbsent(z.produkt(), k -> new TreeMap<>())

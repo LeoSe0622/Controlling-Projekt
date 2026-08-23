@@ -32,7 +32,7 @@ public class SpaltenanzahlRegel implements Zeilenregel {
                 zeile.zeilennummer(),
                 "(ganze Zeile)",
                 ID,
-                Schweregrad.Grad.Fehler,
+                Schweregrad.FEHLER,
                 String.valueOf(zeile.spaltenAnzahl()),
                 "Zeile hat " + zeile.spaltenAnzahl() + " Spalten, erwartet werden " + ERWARTETE_SPALTEN
         );

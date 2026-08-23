@@ -27,7 +27,17 @@ public final class BerichtsmodellBauer {
      * @param roh        alle eingelesenen Zeilen
      * @param erstelltAm Zeitstempel (uebergeben, damit Tests ihn festlegen koennen)
      */
+    /** Mit den Standardschwellen (500 EUR / 5 %) - fuer Tests und einfache Aufrufe. */
     public Berichtsmodell baue(String quelle, List<Rohzeile> roh, LocalDateTime erstelltAm) {
+        return baue(quelle, roh, erstelltAm, Wesentlichkeit.standard());
+    }
+
+    /**
+     * @param wesentlichkeit die Schwellen fuer die Ampel - kommen aus der
+     *                       Kommandozeile, deshalb als Parameter
+     */
+    public Berichtsmodell baue(String quelle, List<Rohzeile> roh,
+                               LocalDateTime erstelltAm, Wesentlichkeit wesentlichkeit) {
  
         Pruefprotokoll protokoll = new Validator().pruefe(roh);
                   
@@ -38,7 +48,6 @@ public final class BerichtsmodellBauer {
         int erwarteteMonate = (int) daten.stream().map(Datenzeile::monat).distinct().count();
     
         Map<String, Abweichung> abweichungen = new AbweichungsRechner().jeProdukt(daten);
-        Wesentlichkeit wesentlichkeit = Wesentlichkeit.standard();
 
         return new Berichtsmodell(
                 quelle,

@@ -97,32 +97,26 @@ public record Berichtsmodell(
      * <p>Eine Zeile kann mehrere Befunde haben. Angezeigt wird der schwerste:
      * Wer FEHLER und WARNUNG hat, ist ein FEHLER.
      */
-    public Schweregrad.Grad statusVon(int zeilennummer) {
+    public Schweregrad statusVon(int zeilennummer) {
 
-        // Erst nach FEHLERN suchen: Wer Fehler UND Warnung hat, ist ein Fehler.
-        // anyMatch hoert beim ersten Treffer auf - es muessen nicht alle
-        // Befunde durchlaufen werden.
         boolean hatFehler = protokoll.befunde().stream()
-                .filter(b -> b.Zeilennummer() == zeilennummer)
-                .anyMatch(b -> b.grad() == Schweregrad.Grad.Fehler);
+                .filter(b -> b.zeilennummer() == zeilennummer)
+                .anyMatch(b -> b.grad() == Schweregrad.FEHLER);
 
         if (hatFehler) {
-            return Schweregrad.Grad.Fehler;
+            return Schweregrad.FEHLER;
         }
 
         boolean hatWarnung = protokoll.befunde().stream()
-                .filter(b -> b.Zeilennummer() == zeilennummer)
-                .anyMatch(b -> b.grad() == Schweregrad.Grad.Warnung);
+                .filter(b -> b.zeilennummer() == zeilennummer)
+                .anyMatch(b -> b.grad() == Schweregrad.WARNUNG);
 
-        return hatWarnung ? Schweregrad.Grad.Warnung : null;
+        return hatWarnung ? Schweregrad.WARNUNG : null;
     }
 
     /** Produkte, denen Monate fehlen — fuer den Hinweis unter der Tabelle. */
     public List<Produktergebnis> unvollstaendigeProdukte() {
 
-        // filter sammelt ALLE passenden Elemente ein. Ein return in einer
-        // Schleife wuerde beim ersten unvollstaendigen Produkt aufhoeren -
-        // und Produkt B, dem drei Monate fehlen, bliebe unkommentiert.
         return produkte.stream()
                 .filter(p -> !p.vollstaendig(erwarteteMonate))
                 .toList();

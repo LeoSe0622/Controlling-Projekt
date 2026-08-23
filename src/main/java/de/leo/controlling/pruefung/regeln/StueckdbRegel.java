@@ -29,8 +29,6 @@ public class StueckdbRegel implements Zeilenregel {
     public List<Befund> pruefe(Rohzeile zeile) {
         List<Befund> befunde = new ArrayList<>();
 
-        // Die variablen Stueckkosten gelten laut CSV fuer beide Seiten,
-        // also gegen beide Preise pruefen.
         pruefePreis(zeile, "planPreis", zeile.planPreis(), zeile.variableStueckkosten(), befunde);
         pruefePreis(zeile, "istPreis", zeile.istPreis(), zeile.variableStueckkosten(), befunde);
 
@@ -45,15 +43,12 @@ public class StueckdbRegel implements Zeilenregel {
     private static void pruefePreis(Rohzeile zeile, String preisFeld, String preisWert,
                                     String kostenWert, List<Befund> befunde) {
 
-        // Zwei Werte -> beide muessen brauchbar sein, bevor verglichen werden darf.
         BigDecimal preis = Zahlen.parse(preisWert);
         BigDecimal kosten = Zahlen.parse(kostenWert);
         if (preis == null || kosten == null) {
             return;
         }
 
-        // Schweigegrundsatz: Negatives ist V05s Thema. Ohne das wuerde Zeile 14
-        // (istPreis = -77.05) hier ein zweites Mal auftauchen, denn 45 >= -77.05.
         if (preis.signum() < 0 || kosten.signum() < 0) {
             return;
         }
@@ -63,7 +58,7 @@ public class StueckdbRegel implements Zeilenregel {
                     zeile.zeilennummer(),
                     preisFeld,
                     ID,
-                    Schweregrad.Grad.Warnung,
+                    Schweregrad.WARNUNG,
                     preisWert,
                     "Variable Stueckkosten (" + kostenWert + ") sind nicht kleiner als "
                             + preisFeld + " (" + preisWert + ") - Deckungsbeitrag je Stueck ist negativ"

@@ -12,7 +12,7 @@ package de.leo.controlling.model;
  * <p>Das Parsen in echte Zahlen passiert später, nach der Validierung, in einer eigenen
  * Klasse {@code Datenzeile}.
  *
- * @param zeilennummer  1-basiert wie im Editor: Kopfzeile = 1, erste Datenzeile = 2.
+ * @param zeilennummer   1-basiert wie im Editor: Kopfzeile = 1, erste Datenzeile = 2.
  *                      Kein Wert aus der CSV, sondern Herkunftsinformation für
  *                      Fehlermeldungen ("Zeile 22, Feld istMenge, war leer").
  * @param spaltenAnzahl wie viele Spalten die Zeile tatsächlich hatte (erwartet: 9).

@@ -22,6 +22,16 @@ import java.util.List;
 public class CsvEinleser {
 
     /**
+     * Liest die Datei und liefert eine Rohzeile je nicht-leerer Datenzeile.
+     *
+     * <p>Das {@code -1} in {@code split(",", -1)} ist keine Feinheit: Ohne den Parameter
+     * verwirft Java am Ende stehende leere Felder. Eine Zeile mit leerer letzter Spalte
+     * haette dann acht statt neun Spalten, und Regel V01 wuerde faelschlich anschlagen.
+     *
+     * <p>Die Zeilennummer ist {@code i + 1}, weil die Kopfzeile im Editor Zeile 1 ist.
+     * Stimmt sie nicht, zeigen saemtliche Fehlermeldungen des Programms auf die falsche
+     * Zeile.
+     *
      * @param pfad Pfad zur CSV-Datei
      * @return eine Rohzeile je nicht-leerer Datenzeile, Kopfzeile ausgenommen
      * @throws IOException wenn die Datei nicht gelesen werden kann
@@ -30,7 +40,6 @@ public class CsvEinleser {
         List<String> zeilen = Files.readAllLines(pfad, StandardCharsets.UTF_8);
         List<Rohzeile> ergebnis = new ArrayList<>();
 
-        // i = 0 ist die Kopfzeile, die überspringen wir -> Start bei 1
         for (int i = 1; i < zeilen.size(); i++) {
             String text = zeilen.get(i);
 

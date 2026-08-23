@@ -22,23 +22,19 @@ public class MonatsformatRegel implements Zeilenregel {
     public List<Befund> pruefe(Rohzeile zeile) {
         String monat = zeile.monat();
 
-        // Schweigegrundsatz: Ein leeres Pflichtfeld ist V02s Thema, nicht unseres.
-        // Muss VOR dem Parsen stehen - YearMonth.parse("") wuerde sonst eine
-        // DateTimeParseException werfen und wir wuerden faelschlich einen
-        // Formatfehler melden.
         if (monat == null || monat.isBlank()) {
             return List.of();
         }
 
         try {
             YearMonth.parse(monat);
-            return List.of();          // hat geklappt -> Monat ist gueltig
+            return List.of();
         } catch (DateTimeParseException e) {
             return List.of(new Befund(
                     zeile.zeilennummer(),
                     "monat",
                     ID,
-                    Schweregrad.Grad.Fehler,
+                    Schweregrad.FEHLER,
                     monat,
                     "Monat '" + monat + "' ist nicht im Format YYYY-MM (01-12)"
             ));

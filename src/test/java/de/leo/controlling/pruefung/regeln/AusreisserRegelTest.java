@@ -35,11 +35,11 @@ class AusreisserRegelTest {
 
         Befund b = befunde.get(0);
         assertEquals("istMenge", b.feld());
-        assertEquals("V08", b.regeId());
-        assertEquals(Schweregrad.Grad.Warnung, b.grad(),
+        assertEquals("V08", b.regelId());
+        assertEquals(Schweregrad.WARNUNG, b.grad(),
                 "V08 ist eine WARNUNG - die Zeile bleibt in der Rechnung und verzerrt sichtbar");
         assertEquals("17950.0", b.originalwert());
-        assertEquals(46, b.Zeilennummer());
+        assertEquals(46, b.zeilennummer());
     }
 
     @Test

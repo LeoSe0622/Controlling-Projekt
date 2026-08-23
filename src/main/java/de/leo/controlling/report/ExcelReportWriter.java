@@ -50,14 +50,9 @@ public final class ExcelReportWriter {
      */
     public void schreibe(Berichtsmodell m, Path ziel) throws IOException {
 
-        // try-with-resources fuer BEIDES: Die Arbeitsmappe haelt temporaere Dateien
-        // offen, der Stream das Dateihandle. Ohne Schliessen bleibt unter Windows
-        // die Datei gesperrt - Excel kann sie dann nicht oeffnen, und der naechste
-        // Programmlauf kann sie nicht ueberschreiben.
         try (XSSFWorkbook wb = new XSSFWorkbook();
              OutputStream out = Files.newOutputStream(ziel)) {
 
-            // Formate EINMAL fuer die ganze Mappe - siehe Formate.
             Formate f = new Formate(wb);
 
             deckblatt(wb, f, m);
@@ -79,9 +74,6 @@ public final class ExcelReportWriter {
 
         text(blatt, 0, 0, "Controlling-Monatsbericht", f.titel);
 
-        // --- Herkunft der Zahlen -------------------------------------------------
-        // Ohne diese drei Zeilen weiss in drei Monaten niemand mehr, welcher
-        // Datenstand das war. Ein Bericht ohne Quellenangabe ist nicht pruefbar.
         text(blatt, 2, 0, "Datenquelle", f.beschriftung);
         text(blatt, 2, 1, m.quelle(), null);
         text(blatt, 3, 0, "Erstellt am", f.beschriftung);
@@ -89,9 +81,6 @@ public final class ExcelReportWriter {
         text(blatt, 4, 0, "Zeitraum", f.beschriftung);
         text(blatt, 4, 1, m.erwarteteMonate() + " Monate", null);
 
-        // --- Datenqualitaet ------------------------------------------------------
-        // Steht VOR den Ergebniszahlen, nicht als Fussnote dahinter: Wer die
-        // Deckungsbeitraege liest, soll vorher wissen, worauf sie beruhen.
         text(blatt, 6, 0, "Datenqualitaet", f.kopfzeile);
         text(blatt, 6, 1, "", f.kopfzeile);
 
@@ -110,11 +99,9 @@ public final class ExcelReportWriter {
         text(blatt, 11, 0, "davon Warnungen", f.beschriftung);
         zahl(blatt, 11, 1, BigDecimal.valueOf(m.protokoll().anzahlWarnungen()), null);
 
-        // qualitaetsquote() liefert 0.878 - das %-Format multipliziert selbst mit 100.
         text(blatt, 12, 0, "Qualitaetsquote", f.beschriftung);
         zahl(blatt, 12, 1, BigDecimal.valueOf(m.protokoll().qualitaetsquote()), f.prozent);
 
-        // --- Betriebsergebnis ----------------------------------------------------
         text(blatt, 14, 0, "Betriebsergebnis", f.kopfzeile);
         text(blatt, 14, 1, "", f.kopfzeile);
 
@@ -128,9 +115,6 @@ public final class ExcelReportWriter {
         zahl(blatt, 17, 1,
                 m.gesamtIst().dbZwei().subtract(m.gesamtPlan().dbZwei()), f.geld);
 
-        // --- Abstimmbruecke ------------------------------------------------------
-        // Die wichtigste Zeile des Deckblatts: Der Bericht sagt selbst, ob seine
-        // beiden Rechenwege dasselbe Ergebnis liefern.
         if (m.brueckeGehtAuf()) {
             text(blatt, 19, 0, "Abstimmbruecke: geht auf.", null);
         } else {
@@ -140,7 +124,6 @@ public final class ExcelReportWriter {
                     f.fehler);
         }
 
-        // NACH dem Schreiben - vorher misst POI leere Spalten.
         blatt.autoSizeColumn(0);
         blatt.autoSizeColumn(1);
     }
@@ -157,21 +140,17 @@ public final class ExcelReportWriter {
         int zeile = 1;
         for (Befund b : m.protokoll().befunde()) {
 
-            // Ein Format je Zeile, kein neues pro Zelle - siehe Formate.
-            CellStyle stil = b.grad() == Schweregrad.Grad.Fehler ? f.fehler : f.warnung;
+            CellStyle stil = b.grad() == Schweregrad.FEHLER ? f.fehler : f.warnung;
 
-            // Die Zeilennummer als ZAHL: So kann man im Excel danach sortieren
-            // und filtern. Als Text stuende "10" vor "9".
-            zahl(blatt, zeile, 0, BigDecimal.valueOf(b.Zeilennummer()), stil);
+            zahl(blatt, zeile, 0, BigDecimal.valueOf(b.zeilennummer()), stil);
             text(blatt, zeile, 1, b.feld(), stil);
-            text(blatt, zeile, 2, b.regeId(), stil);
+            text(blatt, zeile, 2, b.regelId(), stil);
             text(blatt, zeile, 3, b.grad().name(), stil);
             text(blatt, zeile, 4, b.originalwert(), stil);
             text(blatt, zeile, 5, b.meldung(), stil);
             zeile++;
         }
 
-        // Kopfzeile fixieren: 0 Spalten, 1 Zeile bleibt beim Scrollen stehen.
         blatt.createFreezePane(0, 1);
 
         for (int i = 0; i < spalten.length; i++) {
@@ -211,7 +190,6 @@ public final class ExcelReportWriter {
             text(blatt, zeile, 0, e.produkt(), null);
             text(blatt, zeile, 1, e.monate() + "/" + m.erwarteteMonate(), null);
 
-            // Mengen ohne Geldformat - Stueck sind keine Euro.
             zahl(blatt, zeile, 2, e.plan().menge(), null);
             zahl(blatt, zeile, 3, e.ist().menge(), null);
 
@@ -222,9 +200,6 @@ public final class ExcelReportWriter {
             zahl(blatt, zeile, 8, e.plan().dbEins(), f.geld);
             zahl(blatt, zeile, 9, e.ist().dbEins(), f.geld);
 
-            // Margen und Break-Even koennen null sein (Menge 0, kein Umsatz).
-            // Dann bleibt die Zelle LEER: Die Kennzahl ist nicht null, sie ist
-            // nicht definiert. Eine 0 waere eine Falschaussage.
             zahlWennVorhanden(blatt, zeile, 10, e.plan().dbEinsMarge(), f.prozent);
             zahlWennVorhanden(blatt, zeile, 11, e.ist().dbEinsMarge(), f.prozent);
 
@@ -237,9 +212,6 @@ public final class ExcelReportWriter {
             zeile++;
         }
 
-        // Summenzeile. Menge (2, 3) und Break-Even (16) bleiben LEER: Eine summierte
-        // Menge ueber verschiedene Produkte ist bedeutungslos, und einen Break-Even
-        // ueber ein gemischtes Sortiment gibt es nicht.
         text(blatt, zeile, 0, "GESAMT", f.beschriftung);
         zahl(blatt, zeile, 4, m.gesamtPlan().umsatz(), f.geld);
         zahl(blatt, zeile, 5, m.gesamtIst().umsatz(), f.geld);
@@ -255,9 +227,6 @@ public final class ExcelReportWriter {
         zahl(blatt, zeile, 15,
                 m.gesamtIst().dbZwei().subtract(m.gesamtPlan().dbZwei()), f.geld);
 
-        // Erste SPALTE und erste ZEILE fixieren: Bei 17 Spalten scrollt man
-        // waagerecht und weiss sonst nach drei Sekunden nicht mehr, in welcher
-        // Produktzeile man ist.
         blatt.createFreezePane(1, 1);
         for (int i = 0; i < spalten.length; i++) {
             blatt.autoSizeColumn(i);
@@ -287,17 +256,10 @@ public final class ExcelReportWriter {
             zahl(blatt, zeile, 4, a.fixkostenabweichung(), f.geld);
             zahl(blatt, zeile, 5, a.gesamt(), f.geld);
 
-            // Der Punkt, auf den das Berichtsmodell hinauslief: Dieselbe Ampel,
-            // die auf der Konsole "[!!]" ergibt, wird hier eine farbige Zelle.
-            // Leerer Text, nur Farbe - die Zelle IST die Aussage.
             text(blatt, zeile, 6, "", f.fuerAmpel(m.ampelFuer(e)));
             zeile++;
         }
 
-        // Summenzeile ohne Ampel: Ueber alle Produkte heben sich gegenlaeufige
-        // Effekte auf (die Preisabweichung summiert sich auf +680,50, obwohl
-        // einzelne Produkte 11.000 auseinanderliegen). Eine Ampel darauf wuerde
-        // genau das verschleiern, was die Zeilen darueber zeigen.
         Abweichung gesamt = m.gesamtAbweichung();
         text(blatt, zeile, 0, "GESAMT", f.beschriftung);
         zahl(blatt, zeile, 1, gesamt.preisabweichung(), f.geld);
@@ -306,7 +268,6 @@ public final class ExcelReportWriter {
         zahl(blatt, zeile, 4, gesamt.fixkostenabweichung(), f.geld);
         zahl(blatt, zeile, 5, gesamt.gesamt(), f.geld);
 
-        // Zwei Zeilen Abstand, dann die Selbstpruefung im Klartext.
         int brueckenZeile = zeile + 2;
         if (m.brueckeGehtAuf()) {
             text(blatt, brueckenZeile, 0, "Abstimmbruecke: geht auf.", null);
@@ -340,7 +301,6 @@ public final class ExcelReportWriter {
 
         Abweichung a = m.gesamtAbweichung();
 
-        // Der laufende Saldo wandert von Plan nach Ist.
         BigDecimal saldo = m.gesamtPlan().dbZwei();
 
         text(blatt, 1, 0, "Plan-DB II", f.beschriftung);
@@ -369,8 +329,6 @@ public final class ExcelReportWriter {
         text(blatt, 6, 0, "Ist-DB II", f.beschriftung);
         zahl(blatt, 6, 2, m.gesamtIst().dbZwei(), f.geld);
 
-        // Selbstpruefung: Der erlaufene Saldo muss dem Ist-DB-II entsprechen.
-        // Dieselbe Aussage wie in Tab 4 - hier aber Schritt fuer Schritt nachvollziehbar.
         if (saldo.compareTo(m.gesamtIst().dbZwei()) == 0) {
             text(blatt, 8, 0, "Bruecke geht auf: Der Saldo trifft den Ist-DB-II exakt.", null);
         } else {
@@ -400,7 +358,6 @@ public final class ExcelReportWriter {
 
         List<Produktergebnis> produkte = m.produkte();
 
-        // Kopfzeile: Monat, dann je Produkt zwei Spalten.
         text(blatt, 0, 0, "Monat", f.kopfzeile);
         for (int p = 0; p < produkte.size(); p++) {
             text(blatt, 0, 1 + p * 2, produkte.get(p).produkt() + " Plan", f.kopfzeile);
@@ -425,10 +382,6 @@ public final class ExcelReportWriter {
                         .findFirst()
                         .orElse(null);
 
-                // Fehlt der Monat - weil die Zeile aussortiert wurde - bleibt die Zelle
-                // LEER, nicht 0. Das Produkt hat in dem Monat nicht null verdient, wir
-                // WISSEN es nur nicht. Im Diagramm entsteht dadurch eine Luecke statt
-                // eines Einbruchs auf die Nulllinie - die ehrliche Darstellung.
                 if (treffer != null) {
                     zahl(blatt, z + 1, 1 + p * 2, treffer.plan().dbZwei(), f.geld);
                     zahl(blatt, z + 1, 2 + p * 2, treffer.ist().dbZwei(), f.geld);
@@ -469,8 +422,6 @@ public final class ExcelReportWriter {
             zeile++;
         }
 
-        // Ohne diesen Hinweis vergleicht jemand Nord und Sued anhand einer Zahl,
-        // die zur Haelfte aus einer Zufallszuordnung stammt.
         text(blatt, zeile + 1, 0,
                 "Hinweis: Der DB II enthaelt produktfixe Kosten. Die gehoeren fachlich zum "
                         + "Produkt, nicht zur Region, und werden hier derjenigen Kostenstelle "
@@ -503,14 +454,14 @@ public final class ExcelReportWriter {
 
         int zeile = 1;
         for (Rohzeile z : m.alleZeilen()) {
-            Schweregrad.Grad status = m.statusVon(z.zeilennummer());
+            Schweregrad status = m.statusVon(z.zeilennummer());
 
             String statusText;
             CellStyle stil;
-            if (status == Schweregrad.Grad.Fehler) {
+            if (status == Schweregrad.FEHLER) {
                 statusText = "FEHLER";
                 stil = f.fehler;
-            } else if (status == Schweregrad.Grad.Warnung) {
+            } else if (status == Schweregrad.WARNUNG) {
                 statusText = "WARNUNG";
                 stil = f.warnung;
             } else {
@@ -521,10 +472,6 @@ public final class ExcelReportWriter {
             zahl(blatt, zeile, 0, BigDecimal.valueOf(z.zeilennummer()), stil);
             text(blatt, zeile, 1, statusText, stil);
 
-            // Als TEXT, nicht als Zahl - hier steht bewusst der ROHZUSTAND.
-            // Zeile 22 hat ein leeres istMenge, und das soll man sehen. Waere es
-            // eine Zahl, muesste man es interpretieren - und genau das tut
-            // dieser Tab nicht.
             text(blatt, zeile, 2, z.monat(), stil);
             text(blatt, zeile, 3, z.produkt(), stil);
             text(blatt, zeile, 4, z.kostenstelle(), stil);
@@ -537,14 +484,11 @@ public final class ExcelReportWriter {
             zeile++;
         }
 
-        // Zeilennummer UND Status bleiben beim Scrollen stehen.
         blatt.createFreezePane(2, 1);
         for (int i = 0; i < spalten.length; i++) {
             blatt.autoSizeColumn(i);
         }
     }
-
-    // ---------- kleine Helfer, damit die Schreibmethoden lesbar bleiben ----------
 
     /** Schreibt Text in eine Zelle und legt Zeile/Zelle bei Bedarf an. */
     private static void text(Sheet blatt, int zeile, int spalte, String wert, CellStyle stil) {

@@ -45,35 +45,36 @@ public class Validator {
     }
 
     /**
+     * Fuehrt alle Regeln aus und trennt verwertbare von unbrauchbaren Zeilen.
+     *
+     * <p>Aussen die Zeilen, innen die Regeln: So kommen die Befunde nach Zeile sortiert
+     * heraus statt nach Regel - fuer den Bericht die nuetzlichere Reihenfolge.
+     *
+     * <p>Die Fehlerzeilen landen in einem {@code Set}, nicht in einer {@code List}: Eine
+     * Zeile kann mehrere Fehler haben, und {@code contains()} ist beim Set unabhaengig
+     * von der Groesse schnell.
+     *
      * @param alle alle eingelesenen Rohzeilen
      * @return Befunde und verwertbare Zeilen
      */
     public Pruefprotokoll pruefe(List<Rohzeile> alle) {
         List<Befund> befunde = new ArrayList<>();
 
-        // Jede Zeilenregel auf jede Zeile. Aussen die Zeilen, damit die Befunde
-        // nach Zeile sortiert herauskommen - so liest sich der Bericht besser.
         for (Rohzeile zeile : alle) {
             for (Zeilenregel regel : zeilenregeln) {
                 befunde.addAll(regel.pruefe(zeile));
             }
         }
 
-        // Datensatzregeln sehen die gesamte Liste auf einmal.
         for (Datensatzregel regel : datensatzregeln) {
             befunde.addAll(regel.pruefe(alle));
         }
 
-        // Welche Zeilennummern haben mindestens einen FEHLER?
-        // Ein Set, keine List: Zeile 22 kann mehrere Fehler haben, und contains()
-        // ist beim Set unabhaengig von der Groesse schnell.
         Set<Integer> fehlerZeilen = befunde.stream()
-                .filter(b -> b.grad() == Schweregrad.Grad.Fehler)
-                .map(Befund::Zeilennummer)
+                .filter(b -> b.grad() == Schweregrad.FEHLER)
+                .map(Befund::zeilennummer)
                 .collect(Collectors.toSet());
 
-        // Alles ohne FEHLER bleibt verwertbar. Warnungen zaehlen nicht -
-        // die Zeile bleibt drin und wird nur markiert.
         List<Rohzeile> verwertbar = alle.stream()
                 .filter(z -> !fehlerZeilen.contains(z.zeilennummer()))
                 .toList();

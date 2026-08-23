@@ -15,6 +15,22 @@ class WesentlichkeitTest {
     private final Wesentlichkeit w = Wesentlichkeit.standard();
 
     @Test
+    void negativerPlanwertKipptDasProzentkriteriumNicht() {
+        // Ein Produkt, das planmaessig Verlust macht: Plan-DB II = -10.000.
+        // Ohne abs() auf BEIDEN Seiten waere der Quotient negativ und der
+        // Vergleich mit 5 % immer falsch - die Prozent-Schwelle wuerde
+        // stillschweigend nie greifen.
+        assertEquals(Ampel.ROT,
+                w.bewerte(new BigDecimal("-2000.00"), new BigDecimal("-10000.00")));
+    }
+
+    @Test
+    void abweichungVonNullIstImmerGruen() {
+        assertEquals(Ampel.GRUEN,
+                w.bewerte(BigDecimal.ZERO, new BigDecimal("165000.00")));
+    }
+
+    @Test
     void gruenWennBeideSchwellenUnterschritten() {
         // 300 EUR bei 165.000 Plan = 0,18 % - beides unter der Schwelle.
         assertEquals(Ampel.GRUEN,

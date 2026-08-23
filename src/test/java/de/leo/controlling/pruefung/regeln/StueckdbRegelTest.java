@@ -38,10 +38,10 @@ class StueckdbRegelTest {
         assertEquals("istPreis", befunde.get(1).feld());
 
         for (Befund b : befunde) {
-            assertEquals("V06", b.regeId());
-            assertEquals(Schweregrad.Grad.Warnung, b.grad(),
+            assertEquals("V06", b.regelId());
+            assertEquals(Schweregrad.WARNUNG, b.grad(),
                     "V06 ist eine WARNUNG - mit dem Wert kann man rechnen, er ist nur erklaerungsbeduerftig");
-            assertEquals(5, b.Zeilennummer());
+            assertEquals(5, b.zeilennummer());
         }
     }
 

@@ -25,19 +25,14 @@ public record Pruefprotokoll(
         int gepruefteZeilen
 ) {
 
-    // Ein record darf Methoden haben, die etwas AUSRECHNEN - nur zusaetzlichen
-    // Zustand darf er nicht haben. Diese drei Werte leiten sich vollstaendig aus
-    // den Komponenten ab, also gehoeren sie hierher und nicht in den Konstruktor:
-    // sonst koennte jemand ein Protokoll bauen, dessen Quote nicht zu den Listen passt.
-
     /** Wie viele Befunde den Grad FEHLER haben. */
     public long anzahlFehler() {
-        return befunde.stream().filter(b -> b.grad() == Schweregrad.Grad.Fehler).count();
+        return befunde.stream().filter(b -> b.grad() == Schweregrad.FEHLER).count();
     }
 
     /** Wie viele Befunde den Grad WARNUNG haben. */
     public long anzahlWarnungen() {
-        return befunde.stream().filter(b -> b.grad() == Schweregrad.Grad.Warnung).count();
+        return befunde.stream().filter(b -> b.grad() == Schweregrad.WARNUNG).count();
     }
 
     /**
@@ -46,15 +41,10 @@ public record Pruefprotokoll(
      */
     public double qualitaetsquote() {
 
-        // Nur gepruefteZeilen steht im Nenner - nur die kann die Division sprengen.
-        // Bei einer leeren Datei ist 1.0 die sinnvollere Antwort als ein Absturz:
-        // es gibt nichts Kaputtes.
         if (gepruefteZeilen == 0) {
             return 1.0;
         }
 
-        // Der Cast ist Pflicht: int / int ergibt in Java einen int,
-        // 43 / 49 waere 0 statt 0.878.
         return (double) verwertbareZeilen.size() / gepruefteZeilen;
     }
 }

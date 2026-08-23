@@ -33,10 +33,10 @@ class ZahlformatRegelTest {
 
         Befund b = befunde.get(0);
         assertEquals("istMenge", b.feld());
-        assertEquals("V03", b.regeId());
-        assertEquals(Schweregrad.Grad.Fehler, b.grad());
+        assertEquals("V03", b.regelId());
+        assertEquals(Schweregrad.FEHLER, b.grad());
         assertEquals("zweitausend", b.originalwert());
-        assertEquals(5, b.Zeilennummer());
+        assertEquals(5, b.zeilennummer());
     }
 
     @Test

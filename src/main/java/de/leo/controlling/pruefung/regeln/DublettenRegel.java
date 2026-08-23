@@ -32,25 +32,18 @@ public class DublettenRegel implements Datensatzregel {
     public List<Befund> pruefe(List<Rohzeile> alle) {
         List<Befund> befunde = new ArrayList<>();
 
-        // Alle Zeilen nach ihrem fachlichen Schluessel gruppieren.
-        // LinkedHashMap statt HashMap, damit die Befunde in der Reihenfolge der Datei
-        // herauskommen und der Bericht bei jedem Lauf gleich aussieht.
         Map<String, List<Rohzeile>> gruppen = new LinkedHashMap<>();
         for (Rohzeile z : alle) {
             gruppen.computeIfAbsent(schluessel(z), k -> new ArrayList<>()).add(z);
         }
 
-        // Jede Gruppe mit mehr als einem Eintrag ist eine Dublette.
         for (List<Rohzeile> gruppe : gruppen.values()) {
             if (gruppe.size() < 2) {
                 continue;
             }
 
-            // Fuer JEDE Zeile der Gruppe ein Befund - nicht nur fuer die zweite.
             for (Rohzeile z : gruppe) {
 
-                // Die Zeilennummern der jeweils ANDEREN Zeilen der Gruppe.
-                // Zeile 6 bekommt so "... wie Zeile 21", Zeile 21 "... wie Zeile 6".
                 String andere = gruppe.stream()
                         .filter(g -> g.zeilennummer() != z.zeilennummer())
                         .map(g -> String.valueOf(g.zeilennummer()))
@@ -60,7 +53,7 @@ public class DublettenRegel implements Datensatzregel {
                         z.zeilennummer(),
                         "(ganze Zeile)",
                         ID,
-                        Schweregrad.Grad.Fehler,
+                        Schweregrad.FEHLER,
                         schluessel(z),
                         "Dublette: gleiche Kombination wie Zeile " + andere
                 ));
@@ -73,14 +66,12 @@ public class DublettenRegel implements Datensatzregel {
     /**
      * Der fachliche Schluessel einer Zeile.
      *
-     * <p>Warum nicht einfach {@code zeile.equals(andere)}: Die {@code zeilennummer} ist
+     * <p>Warum nicht einfach {@code zeile.equals(andere)}: Die {@code zeilennummer()} ist
      * Teil des Records, also vergleicht das generierte equals() sie mit. Zeile 6 und
      * Zeile 21 sind inhaltlich identisch, aber {@code equals} sagt trotzdem false.
      */
     private static String schluessel(Rohzeile zeile) {
 
-        // Trennzeichen ist Pflicht: ohne das "|" koennten verschiedene Kombinationen
-        // denselben Schluessel ergeben ("AB"+"C" und "A"+"BC" sind beide "ABC").
         return zeile.monat() + "|" + zeile.produkt() + "|" + zeile.kostenstelle();
     }
 }

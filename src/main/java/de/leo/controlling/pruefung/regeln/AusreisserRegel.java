@@ -34,7 +34,6 @@ public class AusreisserRegel implements Zeilenregel {
     public List<Befund> pruefe(Rohzeile zeile) {
         List<Befund> befunde = new ArrayList<>();
 
-        // Gemeldet wird immer das IST-Feld - das ist der verdaechtige Wert.
         pruefePaar(zeile, "istMenge", zeile.planMenge(), zeile.istMenge(), befunde);
         pruefePaar(zeile, "istPreis", zeile.planPreis(), zeile.istPreis(), befunde);
 
@@ -55,21 +54,14 @@ public class AusreisserRegel implements Zeilenregel {
             return;
         }
 
-        // Schweigegrundsatz: Negatives gehoert V05. Ohne das waere Zeile 14
-        // (istPreis = -77.05, 196 % Abweichung) doppelt gemeldet.
         if (plan.signum() < 0 || ist.signum() < 0) {
             return;
         }
 
-        // Ohne Plan-Wert gibt es keine sinnvolle relative Abweichung - und die
-        // Division wuerde eine ArithmeticException werfen.
         if (plan.signum() == 0) {
             return;
         }
 
-        // divide() braucht bei BigDecimal Skala UND Rundungsmodus: Ist das Ergebnis
-        // nicht exakt darstellbar (z.B. 1/3), wirft es sonst. BigDecimal rundet nie
-        // heimlich - es verlangt, dass wir die Genauigkeit festlegen.
         BigDecimal abweichung = ist.subtract(plan).abs()
                 .divide(plan, SKALA, RoundingMode.HALF_UP);
 
@@ -81,7 +73,7 @@ public class AusreisserRegel implements Zeilenregel {
                     zeile.zeilennummer(),
                     istFeld,
                     ID,
-                    Schweregrad.Grad.Warnung,
+                    Schweregrad.WARNUNG,
                     istWert,
                     istFeld + " " + istWert + " weicht " + prozent + " % von Plan "
                             + planWert + " ab"

@@ -35,9 +35,9 @@ class SpaltenanzahlRegelTest {
         assertEquals(1, befunde.size());
 
         Befund b = befunde.get(0);
-        assertEquals(7, b.Zeilennummer());
-        assertEquals("V01", b.regeId());
-        assertEquals(Schweregrad.Grad.Fehler, b.grad());
+        assertEquals(7, b.zeilennummer());
+        assertEquals("V01", b.regelId());
+        assertEquals(Schweregrad.FEHLER, b.grad());
         assertEquals("7", b.originalwert());
     }
 }

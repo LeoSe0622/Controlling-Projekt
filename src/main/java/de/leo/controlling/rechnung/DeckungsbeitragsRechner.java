@@ -57,7 +57,6 @@ public final class DeckungsbeitragsRechner {
     /** Die Plan-Seite einer Zeile. */
     public Deckungsbeitrag plan(Datenzeile z) {
 
-             
         return rechne(z.planMenge(), z.planPreis(),z.variableStueckkosten(), z.fixkostenProdukt());
     }
 
@@ -76,6 +75,13 @@ public final class DeckungsbeitragsRechner {
      *   DB I            = Umsatz - Variable Kosten
      *   DB II           = DB I - Fixkosten
      * </pre>
+     *
+     * <p>Gerundet wird, BEVOR weitergerechnet wird: {@code dbEins} entsteht aus dem
+     * bereits gerundeten Umsatz und den gerundeten variablen Kosten. Andernfalls
+     * waere der angezeigte DB I gelegentlich einen Cent von "Umsatz minus variable
+     * Kosten" der angezeigten Zeile entfernt - und jemand sucht eine Stunde nach der
+     * Differenz. Ein Bericht, dessen Spalten sich addieren lassen, ist mehr wert als
+     * zwei Nachkommastellen theoretische Genauigkeit.
      */
     private static Deckungsbeitrag rechne(BigDecimal menge, BigDecimal preis,
                                           BigDecimal k, BigDecimal fixkosten) {

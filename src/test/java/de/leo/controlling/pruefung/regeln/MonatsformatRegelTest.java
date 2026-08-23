@@ -29,8 +29,8 @@ class MonatsformatRegelTest {
 
         Befund b = befunde.get(0);
         assertEquals("monat", b.feld());
-        assertEquals("V04", b.regeId());
-        assertEquals(Schweregrad.Grad.Fehler, b.grad());
+        assertEquals("V04", b.regelId());
+        assertEquals(Schweregrad.FEHLER, b.grad());
         assertEquals("2025-13", b.originalwert());
     }
 

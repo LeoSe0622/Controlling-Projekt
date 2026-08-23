@@ -33,10 +33,10 @@ class NegativwertRegelTest {
 
         Befund b = befunde.get(0);
         assertEquals("istPreis", b.feld());
-        assertEquals("V05", b.regeId());
-        assertEquals(Schweregrad.Grad.Fehler, b.grad());
+        assertEquals("V05", b.regelId());
+        assertEquals(Schweregrad.FEHLER, b.grad());
         assertEquals("-77.05", b.originalwert());
-        assertEquals(14, b.Zeilennummer());
+        assertEquals(14, b.zeilennummer());
     }
 
     @Test

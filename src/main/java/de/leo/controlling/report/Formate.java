@@ -32,11 +32,23 @@ final class Formate {
     /** Fuer die Ampelspalte - GRUEN. Rot und Gelb teilen sich die Formate mit fehler/warnung. */
     final CellStyle ampelGruen;
 
+    /**
+     * Legt alle Formate der Arbeitsmappe an.
+     *
+     * <p>Drei Fallstricke stecken darin:
+     *
+     * <p>{@code setFillForegroundColor} allein bewirkt nichts. Excel trennt "welche Farbe"
+     * von "wie fuellen"; ohne {@code setFillPattern} bleibt das Muster "keine Fuellung"
+     * und die gesetzte Farbe wird nie verwendet.
+     *
+     * <p>Das Prozentformat multipliziert den Wert SELBST mit 100. Uebergeben wird 0.878,
+     * Excel zeigt 87,8 %. Wer vorher mal 100 rechnet, bekommt 8780 %.
+     *
+     * <p>ROSE und LIGHT_YELLOW statt RED und YELLOW: Kraeftige Farben machen schwarze
+     * Schrift unlesbar. Die Farbe soll die Zeile markieren, nicht den Text verstecken.
+     */
     Formate(Workbook wb) {
 
-        // Schriftarten gehoeren - wie Formate - zur Arbeitsmappe und werden einmal
-        // erzeugt. Ein Font ist kein eigenstaendiges Objekt, sondern ein Eintrag in
-        // der Schriftentabelle der Datei.
         Font fettGross = wb.createFont();
         fettGross.setBold(true);
         fettGross.setFontHeightInPoints((short) 14);
@@ -47,9 +59,6 @@ final class Formate {
         titel = wb.createCellStyle();
         titel.setFont(fettGross);
 
-        // Kopfzeilen: fett, grau hinterlegt, zentriert.
-        // setFillPattern nicht vergessen - ohne das bleibt die Farbe unsichtbar,
-        // weil Excel dann nicht weiss, WIE es fuellen soll.
         kopfzeile = wb.createCellStyle();
         kopfzeile.setFont(fett);
         kopfzeile.setFillForegroundColor(IndexedColors.GREY_25_PERCENT.getIndex());
@@ -59,22 +68,12 @@ final class Formate {
         beschriftung = wb.createCellStyle();
         beschriftung.setFont(fett);
 
-        // Zahlenformate sind Excel-Formatstrings - dieselben, die man im Dialog
-        // "Zellen formatieren / Benutzerdefiniert" eintippt.
-        //   #  = Ziffer, wird bei fuehrender Null weggelassen
-        //   0  = Ziffer, wird immer angezeigt
-        //   ,  = Tausendertrenner
-        //   Text in Anfuehrungszeichen wird woertlich angehaengt
         geld = wb.createCellStyle();
         geld.setDataFormat(wb.createDataFormat().getFormat("#,##0.00 \"EUR\""));
 
-        // ACHTUNG: Das %-Format multipliziert den Wert automatisch mit 100.
-        // Man uebergibt also 0.878 und Excel zeigt "87,8 %".
         prozent = wb.createCellStyle();
         prozent.setDataFormat(wb.createDataFormat().getFormat("0.0 %"));
 
-        // ROSE statt RED: kraeftiges Rot macht schwarze Schrift unlesbar.
-        // Die Farbe soll die Zeile markieren, nicht den Text verstecken.
         fehler = wb.createCellStyle();
         fehler.setFillForegroundColor(IndexedColors.ROSE.getIndex());
         fehler.setFillPattern(FillPatternType.SOLID_FOREGROUND);

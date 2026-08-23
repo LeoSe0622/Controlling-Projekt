@@ -28,7 +28,6 @@ public record Produktergebnis(
 
         return ist.dbZwei().subtract(plan.dbZwei());
 
-       
     }
 
     /** Ob alle erwarteten Monate vorliegen. */

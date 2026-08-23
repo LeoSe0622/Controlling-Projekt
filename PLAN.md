@@ -355,16 +355,16 @@ Exit-Codes: `0` sauber · `1` mit Warnungen · `2` Fehlerzeilen vorhanden · `3`
 | Phase | Inhalt | Aufwand | Status |
 |---|---|---|---|
 | **P0** | Gradle-Setup, `.gitignore`, Projektgerüst | 0,5 h | ✅ erledigt |
-| **P1** | `Rohzeile` + `CsvEinleser` + `App` — Datei einlesen, roh | 2 h | ← **hier** |
-| **P2** | Validierung: Interfaces, 8 Regeln, `Pruefprotokoll` + Tests | 4 h | |
-| **P3** | `Datenzeile` (geparst) + Deckungsbeitragsrechnung + Tests | 3 h | |
-| **P4** | Abweichungsanalyse + Abstimmbrücke + Tests | 4 h | |
-| **P5** | `Berichtsmodell` + Excel-Writer, Tabs 1–4 | 5 h | |
-| **P6** | Tabs 5–8, Diagramme, Formatierung | 3 h | |
-| **P7** | CLI, Exit-Codes, README, Aufräumen | 2 h | |
+| **P1** | `Rohzeile` + `CsvEinleser` + `App` — Datei einlesen, roh | 2 h | ✅ erledigt |
+| **P2** | Validierung: Interfaces, 8 Regeln, `Pruefprotokoll` + Tests | 4 h | ✅ erledigt |
+| **P3** | `Datenzeile` (geparst) + Deckungsbeitragsrechnung + Tests | 3 h | ✅ erledigt |
+| **P4** | Abweichungsanalyse + Abstimmbrücke + Tests | 4 h | ✅ erledigt |
+| **P5** | `Berichtsmodell` + Excel-Writer, Tabs 1–4 | 5 h | ✅ erledigt |
+| **P6** | Tabs 5–8, Formatierung | 3 h | ✅ erledigt |
+| **P7** | CLI, Exit-Codes, README, Aufräumen | 2 h | ✅ erledigt |
 
-**Gesamt ≈ 24 h.** Nach P4 ist die Fachlogik komplett — ab da wird es Kosmetik, und es gibt
-jederzeit ein lauffähiges Zwischenergebnis.
+**Stand: Phasen 0–7 abgeschlossen, 121 Tests grün.** Offen ist nur noch Phase 8
+(Bedienung, siehe Abschnitt 9).
 
 **Reihenfolge-Regel:** Jede Phase endet mit grünen Tests und einem Commit. Kein Modul wird
 angefangen, bevor das vorherige testgedeckt ist — sonst debuggt man am Ende die

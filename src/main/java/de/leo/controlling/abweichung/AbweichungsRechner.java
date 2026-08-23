@@ -43,10 +43,6 @@ public final class AbweichungsRechner {
         BigDecimal preis = preisDiff.multiply(z.planMenge()).setScale(SKALA_GELD, RoundingMode.HALF_UP);
         BigDecimal mengen = mengenDiff.multiply(z.planPreis().subtract(z.variableStueckkosten())).setScale(SKALA_GELD, RoundingMode.HALF_UP);
         BigDecimal misch = preisDiff.multiply(mengenDiff).setScale(SKALA_GELD, RoundingMode.HALF_UP);
-        // Die CSV hat nur EINE Fixkostenspalte - Plan und Ist sind identisch,
-        // die Fixkostenabweichung ist in diesem Datenmodell strukturell null.
-        // setScale, damit alle vier Werte dieselbe Skala haben: BigDecimal.ZERO
-        // hat Skala 0, und equals() vergleicht die Skala mit.
         BigDecimal fix = BigDecimal.ZERO.setScale(SKALA_GELD);
         return new Abweichung(preis, mengen, misch, fix);
     }

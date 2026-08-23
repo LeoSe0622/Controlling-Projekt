@@ -43,8 +43,8 @@ class PflichtfeldRegelTest {
         Befund b = befunde.get(0);
 
         assertEquals("istMenge", b.feld());
-        assertEquals(Schweregrad.Grad.Fehler, b.grad());
-        assertEquals(22, b.Zeilennummer());
+        assertEquals(Schweregrad.FEHLER, b.grad());
+        assertEquals(22, b.zeilennummer());
         assertEquals("", b.originalwert());
     }
 
