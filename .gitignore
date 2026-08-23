@@ -16,3 +16,6 @@ out/
 # OS
 Thumbs.db
 .DS_Store
+
+# erzeugte Berichte
+*_Monatsbericht.xlsx

@@ -3,6 +3,7 @@ package de.leo.controlling.rechnung;
 import de.leo.controlling.model.Datenzeile;
 
 import java.math.BigDecimal;
+import java.time.YearMonth;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -75,6 +76,75 @@ public final class ProduktRechner {
         return rechner.summe(ergebnisse.stream()
                 .map(Produktergebnis::ist)
                 .toList());
+    }
+
+    /**
+     * Ergebnis je Produkt UND Monat - die Grundlage fuer die Zeitreihe.
+     *
+     * <p>Gruppiert wird, obwohl es nach der Validierung je (Produkt, Monat) nur
+     * eine Zeile geben kann: Die Dublettenregel sorgt dafuer, nicht diese Methode.
+     * Wer sich hier auf die Eindeutigkeit verlaesst, rechnet still falsch, sobald
+     * jemand V07 abschaltet oder die Daten anders geschnitten sind.
+     *
+     * @return sortiert nach Produkt, darin nach Monat
+     */
+    public List<Monatsergebnis> jeProduktUndMonat(List<Datenzeile> zeilen) {
+
+        // Verschachtelte TreeMap: aussen Produkt (alphabetisch), innen Monat
+        // (chronologisch - YearMonth ist von sich aus vergleichbar).
+        Map<String, Map<YearMonth, List<Datenzeile>>> gruppen = new TreeMap<>();
+        for (Datenzeile z : zeilen) {
+            gruppen.computeIfAbsent(z.produkt(), k -> new TreeMap<>())
+                    .computeIfAbsent(z.monat(), k -> new ArrayList<>())
+                    .add(z);
+        }
+
+        List<Monatsergebnis> ergebnis = new ArrayList<>();
+        for (Map.Entry<String, Map<YearMonth, List<Datenzeile>>> proProdukt : gruppen.entrySet()) {
+            for (Map.Entry<YearMonth, List<Datenzeile>> proMonat : proProdukt.getValue().entrySet()) {
+
+                List<Deckungsbeitrag> plan = new ArrayList<>();
+                List<Deckungsbeitrag> ist = new ArrayList<>();
+                for (Datenzeile z : proMonat.getValue()) {
+                    plan.add(rechner.plan(z));
+                    ist.add(rechner.ist(z));
+                }
+
+                ergebnis.add(new Monatsergebnis(proProdukt.getKey(), proMonat.getKey(),
+                        rechner.summe(plan), rechner.summe(ist)));
+            }
+        }
+        return ergebnis;
+    }
+
+    /**
+     * Ergebnis je Kostenstelle - dieselbe Gruppierung wie {@link #jeProdukt}, nur
+     * mit einem anderen Schluessel.
+     *
+     * <p>Zur Aussagekraft siehe {@link Kostenstellenergebnis}: Der DB I laesst sich
+     * einer Region sauber zurechnen, der DB II nur eingeschraenkt.
+     *
+     * @return alphabetisch nach Kostenstelle
+     */
+    public List<Kostenstellenergebnis> jeKostenstelle(List<Datenzeile> zeilen) {
+
+        Map<String, List<Datenzeile>> nachStelle = new TreeMap<>();
+        for (Datenzeile z : zeilen) {
+            nachStelle.computeIfAbsent(z.kostenstelle(), k -> new ArrayList<>()).add(z);
+        }
+
+        List<Kostenstellenergebnis> ergebnis = new ArrayList<>();
+        for (Map.Entry<String, List<Datenzeile>> e : nachStelle.entrySet()) {
+            List<Deckungsbeitrag> plan = new ArrayList<>();
+            List<Deckungsbeitrag> ist = new ArrayList<>();
+            for (Datenzeile z : e.getValue()) {
+                plan.add(rechner.plan(z));
+                ist.add(rechner.ist(z));
+            }
+            ergebnis.add(new Kostenstellenergebnis(e.getKey(),
+                    rechner.summe(plan), rechner.summe(ist), e.getValue().size()));
+        }
+        return ergebnis;
     }
 
     /** Zaehlt die VERSCHIEDENEN Monate einer Gruppe. */
