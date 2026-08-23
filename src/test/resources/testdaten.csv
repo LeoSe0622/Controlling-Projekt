@@ -1,0 +1,19 @@
+monat,produkt,kostenstelle,plan_menge,ist_menge,plan_preis,ist_preis,variable_stueckkosten,fixkosten_produkt
+2025-01,Produkt A,Vertrieb Nord,1000,955.0,50.0,51.03,30.0,5000
+2025-02,Produkt A,Vertrieb Sued,1000,1006.0,50.0,49.68,30.0,5000
+2025-03,Produkt A,Vertrieb Nord,1000,957.0,50.0,49.77,30.0,5000
+2025-04,Produkt A,Vertrieb Nord,1000,957.0,50.0,53.83,30.0,5000
+2025-01,Produkt B,Vertrieb Sued,600,546.0,80.0,81.02,45.0,3000
+2025-02,Produkt B,Vertrieb Sued,600,572.0,80.0,78.32,45.0,3000
+2025-03,Produkt B,Vertrieb Sued,600,566.0,80.0,73.15,45.0,3000
+2025-04,Produkt B,Vertrieb Sued,600,,80.0,83.03,45.0,3000
+2025-01,Produkt C,Vertrieb Nord,2000,1984.0,25.0,24.07,12.0,2000
+2025-02,Produkt C,Vertrieb Nord,2000,2233.0,25.0,26.54,12.0,2000
+2025-03,Produkt C,Vertrieb Nord,2000,1763.0,25.0,26.49,12.0,2000
+2025-04,Produkt C,Vertrieb Nord,2000,1880.0,25.0,24.22,12.0,2000
+2025-01,Produkt D,Vertrieb Nord,350,394.0,120.0,123.68,70.0,4000
+2025-02,Produkt D,Vertrieb Nord,350,301.0,120.0,117.30,70.0,4000
+2025-03,Produkt D,Vertrieb Sued,350,334.0,120.0,120.53,70.0,4000
+2025-04,Produkt D,Vertrieb Nord,350,17950.0,120.0,111.54,70.0,4000
+2025-04,Produkt A,Vertrieb Nord,1000,957.0,50.0,53.83,30.0,5000
+2025-02,Produkt B,Vertrieb Nord,600,761.0,80.0,-77.05,45.0,3000

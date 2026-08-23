@@ -1,115 +1,99 @@
 package de.leo.controlling.rechnung;
 
-import de.leo.controlling.io.CsvEinleser;
+import de.leo.controlling.Testdaten;
 import de.leo.controlling.model.Datenzeile;
-import de.leo.controlling.pruefung.Validator;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.math.BigDecimal;
-import java.nio.file.Path;
 import java.time.YearMonth;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-/**
- * Prueft die beiden Aggregationen fuer Zeitreihe und Kostenstellen
- * gegen die echten Daten.
- */
+/** Prueft die beiden Aggregationen fuer Zeitreihe und Kostenstellen. */
 class AggregationenTest {
 
     private final ProduktRechner rechner = new ProduktRechner();
 
-    private static List<Datenzeile> echteDaten() throws IOException {
-        return new Validator()
-                .pruefe(new CsvEinleser().lies(Path.of("controlling_rohdaten.csv")))
-                .verwertbareZeilen().stream()
-                .map(Datenzeile::aus)
-                .toList();
-    }
-
     @Test
     void zeitreiheHatEinenEintragJeProduktUndMonat() throws IOException {
-        List<Monatsergebnis> zeitreihe = rechner.jeProduktUndMonat(echteDaten());
+        List<Monatsergebnis> zeitreihe = rechner.jeProduktUndMonat(Testdaten.datenzeilen());
 
-        // 43 verwertbare Zeilen, je (Produkt, Monat) genau eine -> 43 Eintraege.
-        assertEquals(43, zeitreihe.size());
-
-        // Sortiert: erst Produkt A alphabetisch, darin chronologisch ab Januar.
+        assertEquals(14, zeitreihe.size());
         assertEquals("Produkt A", zeitreihe.get(0).produkt());
         assertEquals(YearMonth.of(2025, 1), zeitreihe.get(0).monat());
     }
 
+    /**
+     * Die Zeitreihe beantwortet, was das Jahresergebnis nicht kann: ob ein Produkt
+     * durchgaengig auffaellig war oder nur in einem Monat.
+     */
     @Test
     void zeitreiheZeigtDenAusreisserMonat() throws IOException {
-        // Produkt D, Juni 2025 - das ist CSV-Zeile 46 mit istMenge 17950.
-        Monatsergebnis juni = rechner.jeProduktUndMonat(echteDaten()).stream()
-                .filter(e -> e.produkt().equals("Produkt D"))
-                .filter(e -> e.monat().equals(YearMonth.of(2025, 6)))
-                .findFirst()
-                .orElseThrow();
+        List<Monatsergebnis> zeitreihe = rechner.jeProduktUndMonat(Testdaten.datenzeilen());
 
-        // Umsatz = 17950 x 111,54 = 2.002.143,00
-        assertEquals(new BigDecimal("2002143.00"), juni.ist().umsatz());
+        Monatsergebnis april = eintrag(zeitreihe, "Produkt D", YearMonth.of(2025, 4));
+        Monatsergebnis maerz = eintrag(zeitreihe, "Produkt D", YearMonth.of(2025, 3));
 
-        // Genau dafuer gibt es die Zeitreihe: Auf Jahresebene sieht man nur, DASS
-        // Produkt D auffaellig ist. Hier sieht man, dass es an EINEM Monat liegt.
-        Monatsergebnis mai = rechner.jeProduktUndMonat(echteDaten()).stream()
-                .filter(e -> e.produkt().equals("Produkt D"))
-                .filter(e -> e.monat().equals(YearMonth.of(2025, 5)))
-                .findFirst()
-                .orElseThrow();
-
-        assertTrue(juni.ist().umsatz().compareTo(mai.ist().umsatz().multiply(new BigDecimal("40"))) > 0,
-                "der Juni-Umsatz muss um Groessenordnungen ueber dem Mai liegen");
+        assertEquals(new BigDecimal("2002143.00"), april.ist().umsatz());
+        assertTrue(april.ist().umsatz().compareTo(
+                        maerz.ist().umsatz().multiply(new BigDecimal("40"))) > 0,
+                "der Ausreissermonat muss um Groessenordnungen ueber den uebrigen liegen");
     }
 
     @Test
     void kostenstellenTeilenAlleZeilenAuf() throws IOException {
-        List<Kostenstellenergebnis> stellen = rechner.jeKostenstelle(echteDaten());
+        List<Kostenstellenergebnis> stellen = rechner.jeKostenstelle(Testdaten.datenzeilen());
 
         assertEquals(2, stellen.size());
         assertEquals("Vertrieb Nord", stellen.get(0).kostenstelle());
         assertEquals("Vertrieb Sued", stellen.get(1).kostenstelle());
 
-        // Keine Zeile geht verloren, keine wird doppelt gezaehlt.
-        assertEquals(43, stellen.get(0).zeilen() + stellen.get(1).zeilen());
+        assertEquals(14, stellen.get(0).zeilen() + stellen.get(1).zeilen(),
+                "keine Zeile geht verloren, keine wird doppelt gezaehlt");
     }
 
+    /**
+     * Zwei voellig verschiedene Gruppierungen derselben Zeilen muessen dieselbe Summe
+     * ergeben. Ginge unterwegs etwas verloren oder wuerde doppelt gezaehlt, koennte das
+     * nicht aufgehen — unabhaengig davon, welche Daten vorliegen.
+     */
     @Test
     void kostenstellenSummeStimmtMitDemBetriebsergebnisUeberein() throws IOException {
-        List<Datenzeile> daten = echteDaten();
+        List<Datenzeile> daten = Testdaten.datenzeilen();
 
-        List<Kostenstellenergebnis> stellen = rechner.jeKostenstelle(daten);
-        BigDecimal ueberKostenstellen = stellen.stream()
+        BigDecimal ueberKostenstellen = rechner.jeKostenstelle(daten).stream()
                 .map(k -> k.ist().dbZwei())
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         BigDecimal ueberProdukte = rechner.gesamtIst(rechner.jeProdukt(daten)).dbZwei();
 
-        // Zwei voellig verschiedene Gruppierungen derselben 43 Zeilen muessen
-        // dieselbe Summe ergeben. Waere das nicht so, ginge unterwegs etwas
-        // verloren oder wuerde doppelt gezaehlt.
         assertEquals(0, ueberKostenstellen.compareTo(ueberProdukte),
                 "Kostenstellen: " + ueberKostenstellen + " vs. Produkte: " + ueberProdukte);
     }
 
+    /** Dieselbe Probe eine Ebene tiefer: Monate eines Produkts gegen sein Jahresergebnis. */
     @Test
     void zeitreiheSummeStimmtMitDemProduktergebnisUeberein() throws IOException {
-        List<Datenzeile> daten = echteDaten();
+        List<Datenzeile> daten = Testdaten.datenzeilen();
 
-        BigDecimal ueberMonate = rechner.jeProduktUndMonat(daten).stream()
-                .filter(e -> e.produkt().equals("Produkt C"))
-                .map(e -> e.ist().dbZwei())
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        for (Produktergebnis p : rechner.jeProdukt(daten)) {
+            BigDecimal ueberMonate = rechner.jeProduktUndMonat(daten).stream()
+                    .filter(e -> e.produkt().equals(p.produkt()))
+                    .map(e -> e.ist().dbZwei())
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        BigDecimal ausJahresergebnis = rechner.jeProdukt(daten).stream()
-                .filter(p -> p.produkt().equals("Produkt C"))
-                .findFirst().orElseThrow()
-                .ist().dbZwei();
+            assertEquals(0, ueberMonate.compareTo(p.ist().dbZwei()), p.produkt());
+        }
+    }
 
-        assertEquals(0, ueberMonate.compareTo(ausJahresergebnis));
+    private static Monatsergebnis eintrag(List<Monatsergebnis> zeitreihe,
+                                          String produkt, YearMonth monat) {
+        return zeitreihe.stream()
+                .filter(e -> e.produkt().equals(produkt) && e.monat().equals(monat))
+                .findFirst()
+                .orElseThrow(() -> new AssertionError("fehlt: " + produkt + " " + monat));
     }
 }

@@ -23,19 +23,23 @@ import java.util.List;
  *
  * <p>Exit-Codes, damit das Programm automatisierbar bleibt:
  * 0 = sauber, 1 = nur Warnungen, 2 = Fehlerzeilen vorhanden,
- * 3 = Abbruch (Argumente falsch oder Datei unlesbar).
+ * 3 = Abbruch (Argumente falsch, Eingabe unlesbar oder Ausgabe nicht schreibbar).
+ *
+ * <p>Die drei Abbruchgruende werden getrennt behandelt, obwohl sie denselben Code liefern:
+ * Ein Tippfehler im Argument, eine fehlende CSV und eine in Excel geoeffnete Zieldatei
+ * verlangen jeweils etwas anderes vom Benutzer. Eine Sammelmeldung wuerde ihn am falschen
+ * Ende suchen lassen.
  *
  * <p>Der Aufruf zum Oeffnen steht VOR den {@code System.exit}-Zeilen: Bei Exit-Code 1
- * oder 2 wuerde er sonst nie ausgefuehrt, und das sind die haeufigsten Faelle. Im
- * {@code catch}-Block hat er nichts zu suchen - bei Code 3 gibt es keinen Bericht.
+ * oder 2 wuerde er sonst nie ausgefuehrt, und das sind die haeufigsten Faelle. In einem
+ * catch-Block hat er nichts zu suchen - dort gibt es keinen Bericht.
  *
- * <p>{@code isDesktopSupported()} ist Pflicht: Auf einem Server ohne grafische
- * Oberflaeche fliegt sonst eine HeadlessException, ausgerechnet dort, wo niemand
- * sie sieht.
+ * <p>{@code isDesktopSupported()} ist Pflicht: Auf einem Server ohne grafische Oberflaeche
+ * fliegt sonst eine HeadlessException, ausgerechnet dort, wo niemand sie sieht.
  *
  * <p>Das {@code return} nach {@code System.exit(3)} erreicht die JVM nie. Der Compiler
- * weiss das aber nicht und wuerde sonst "konfig ist vielleicht nicht initialisiert"
- * melden.
+ * weiss das aber nicht und wuerde sonst melden, eine Variable sei vielleicht nicht
+ * initialisiert.
  */
 public class App {
 
@@ -52,35 +56,55 @@ public class App {
             return;
         }
 
+        List<Rohzeile> roh;
         try {
-            List<Rohzeile> roh = new CsvEinleser().lies(konfig.eingabe());
-
-            Berichtsmodell modell = new BerichtsmodellBauer().baue(
-                    konfig.eingabe().getFileName().toString(),
-                    roh,
-                    LocalDateTime.now(),
-                    konfig.wesentlichkeit());
-
-            new KonsolenReport().schreibe(modell);
-
-            new ExcelReportWriter().schreibe(modell, konfig.ausgabe());
-            System.out.println();
-            System.out.println("Bericht geschrieben: " + konfig.ausgabe());
-
-            if (konfig.oeffnen() && Desktop.isDesktopSupported()) {
-                Desktop.getDesktop().open(konfig.ausgabe().toFile());
-            }
-            if (modell.protokoll().anzahlFehler() > 0) {
-                System.exit(2);
-            } else if (modell.protokoll().anzahlWarnungen() > 0) {
-                System.exit(1);
-            }
-
+            roh = new CsvEinleser().lies(konfig.eingabe());
         } catch (IOException e) {
-            System.err.println("Datei konnte nicht gelesen oder geschrieben werden: "
-                    + konfig.eingabe().toAbsolutePath());
+            System.err.println("Die Eingabedatei konnte nicht gelesen werden:");
+            System.err.println("  " + konfig.eingabe().toAbsolutePath());
             System.err.println("Grund: " + e.getMessage());
             System.exit(3);
+            return;
+        }
+
+        Berichtsmodell modell = new BerichtsmodellBauer().baue(
+                konfig.eingabe().getFileName().toString(),
+                roh,
+                LocalDateTime.now(),
+                konfig.wesentlichkeit());
+
+        new KonsolenReport().schreibe(modell);
+
+        try {
+            new ExcelReportWriter().schreibe(modell, konfig.ausgabe());
+        } catch (IOException e) {
+            System.err.println();
+            System.err.println("Der Bericht konnte nicht geschrieben werden:");
+            System.err.println("  " + konfig.ausgabe().toAbsolutePath());
+            System.err.println("Grund: " + e.getMessage());
+            System.err.println();
+            System.err.println("Haeufigste Ursache: Die Datei ist noch in Excel geoeffnet.");
+            System.err.println("Schliesse sie und starte erneut.");
+            System.exit(3);
+            return;
+        }
+
+        System.out.println();
+        System.out.println("Bericht geschrieben: " + konfig.ausgabe());
+
+        if (konfig.oeffnen() && Desktop.isDesktopSupported()) {
+            try {
+                Desktop.getDesktop().open(konfig.ausgabe().toFile());
+            } catch (IOException e) {
+                System.err.println("Der Bericht wurde geschrieben, konnte aber nicht "
+                        + "geoeffnet werden: " + e.getMessage());
+            }
+        }
+
+        if (modell.protokoll().anzahlFehler() > 0) {
+            System.exit(2);
+        } else if (modell.protokoll().anzahlWarnungen() > 0) {
+            System.exit(1);
         }
     }
 }

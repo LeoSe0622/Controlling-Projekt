@@ -70,7 +70,7 @@ class AusgabepfadTest {
     void machtAusRelativemPfadEinenAbsoluten() {
         // Beim Reinziehen kann ein relativer Pfad ankommen. Der Bericht muss
         // trotzdem eindeutig verortet sein.
-        Path ziel = Berichtskonfiguration.ausgabepfadFuer(Path.of("controlling_rohdaten.csv"));
+        Path ziel = Berichtskonfiguration.ausgabepfadFuer(Path.of("irgendeine.csv"));
 
         assertEquals(true, ziel.isAbsolute());
     }

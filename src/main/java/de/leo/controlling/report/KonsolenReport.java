@@ -15,9 +15,9 @@ import java.time.format.DateTimeFormatter;
  * und Formatierung — alles Fragen der Darstellung. Was WAHR ist, steht im Modell; wie es
  * AUSSIEHT, steht hier.
  *
- * <p>Der ExcelReportWriter wird dieselben Getter aufrufen und andere Entscheidungen
- * treffen. Dass beide dasselbe Modell lesen, ist der Grund, warum sie nicht auseinander
- * laufen koennen.
+ * <p>Der ExcelReportWriter ruft dieselben Getter auf und trifft andere Entscheidungen.
+ * Dass beide dasselbe Modell lesen, ist der Grund, warum sie nicht auseinander laufen
+ * koennen.
  *
  * <p>Eine Methode je Abschnitt: Wer die Reihenfolge im Bericht aendern will, sortiert die
  * Aufrufe in {@link #schreibe}, statt in einer 150-Zeilen-Methode zu suchen.
@@ -27,6 +27,9 @@ public final class KonsolenReport {
     private static final DateTimeFormatter ZEITSTEMPEL =
             DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm");
 
+    /** Untergrenze der Produktspalte, damit die Ueberschrift nicht klemmt. */
+    private static final int MINDESTBREITE_PRODUKT = 12;
+
     public void schreibe(Berichtsmodell m) {
         kopf(m);
         datenqualitaet(m);
@@ -35,6 +38,7 @@ public final class KonsolenReport {
         abstimmbruecke(m);
     }
 
+    /** Herkunft der Zahlen: Ohne Quelle und Zeitstempel ist ein Bericht nicht pruefbar. */
     private void kopf(Berichtsmodell m) {
         System.out.println("Eingelesen: " + m.alleZeilen().size()
                 + " Rohzeilen aus " + m.quelle());
@@ -42,6 +46,7 @@ public final class KonsolenReport {
         System.out.println();
     }
 
+    /** Alle Befunde, danach die Kennzahlen zur Datenqualitaet. */
     private void datenqualitaet(Berichtsmodell m) {
         for (Befund b : m.protokoll().befunde()) {
             System.out.printf("  Zeile %-3d  %-8s  %-22s  %s%n",
@@ -59,13 +64,25 @@ public final class KonsolenReport {
         System.out.println();
     }
 
+    /**
+     * Tabelle mit DB II je Produkt, Summenzeile und Hinweisen zu fehlenden Monaten.
+     *
+     * <p>Die Breite der Produktspalte richtet sich nach dem laengsten Namen. Eine feste
+     * Breite bricht, sobald ein Name laenger ist: {@code printf} kuerzt nicht, sondern
+     * schiebt alles Folgende nach rechts — dann fluchten die Zahlenspalten nicht mehr
+     * und die Tabelle ist unlesbar.
+     */
     private void deckungsbeitraege(Berichtsmodell m) {
-        System.out.printf("%-12s %8s %15s %15s %15s%n",
+        int breite = produktspaltenbreite(m);
+        String zeilenformat = "%-" + breite + "s %8s %15s %15s %15s%n";
+        int strichbreite = breite + 3 * 16 + 9;
+
+        System.out.printf(zeilenformat,
                 "Produkt", "Monate", "Plan-DB II", "Ist-DB II", "Abweichung");
-        System.out.println("-".repeat(70));
+        System.out.println("-".repeat(strichbreite));
 
         for (Produktergebnis e : m.produkte()) {
-            System.out.printf("%-12s %8s %15s %15s %15s%n",
+            System.out.printf(zeilenformat,
                     e.produkt(),
                     e.monate() + "/" + m.erwarteteMonate(),
                     geld(e.plan().dbZwei()),
@@ -73,8 +90,8 @@ public final class KonsolenReport {
                     geld(e.dbZweiAbweichung()));
         }
 
-        System.out.println("-".repeat(70));
-        System.out.printf("%-12s %8s %15s %15s %15s%n",
+        System.out.println("-".repeat(strichbreite));
+        System.out.printf(zeilenformat,
                 "GESAMT", "",
                 geld(m.gesamtPlan().dbZwei()),
                 geld(m.gesamtIst().dbZwei()),
@@ -91,16 +108,27 @@ public final class KonsolenReport {
         }
     }
 
+    /**
+     * Tabelle mit der Zerlegung der Abweichung je Produkt.
+     *
+     * <p>Die Ampel der Summenzeile bleibt leer: Ueber alle Produkte heben sich
+     * gegenlaeufige Effekte auf, und eine Ampel darauf wuerde genau das verschleiern,
+     * was die Zeilen darueber zeigen.
+     */
     private void abweichungen(Berichtsmodell m) {
+        int breite = produktspaltenbreite(m);
+        String zeilenformat = "%-" + breite + "s %15s %15s %15s %15s %6s%n";
+        int strichbreite = breite + 4 * 16 + 7 + 5;
+
         System.out.println();
-        System.out.printf("%-12s %15s %15s %15s %15s %6s%n",
+        System.out.printf(zeilenformat,
                 "Produkt", "Preis", "Menge", "Misch", "Gesamt", "Ampel");
-        System.out.println("-".repeat(83));
+        System.out.println("-".repeat(strichbreite));
 
         for (Produktergebnis e : m.produkte()) {
             Abweichung a = m.abweichungen().get(e.produkt());
 
-            System.out.printf("%-12s %15s %15s %15s %15s %6s%n",
+            System.out.printf(zeilenformat,
                     e.produkt(),
                     geld(a.preisabweichung()),
                     geld(a.mengenabweichung()),
@@ -110,8 +138,8 @@ public final class KonsolenReport {
         }
 
         Abweichung gesamt = m.gesamtAbweichung();
-        System.out.println("-".repeat(83));
-        System.out.printf("%-12s %15s %15s %15s %15s %6s%n", "GESAMT",
+        System.out.println("-".repeat(strichbreite));
+        System.out.printf(zeilenformat, "GESAMT",
                 geld(gesamt.preisabweichung()),
                 geld(gesamt.mengenabweichung()),
                 geld(gesamt.mischabweichung()),
@@ -120,6 +148,7 @@ public final class KonsolenReport {
         System.out.println();
     }
 
+    /** Meldet, ob die Zerlegung und die Deckungsbeitraege dasselbe Ergebnis liefern. */
     private void abstimmbruecke(Berichtsmodell m) {
         if (m.brueckeGehtAuf()) {
             System.out.println("Abstimmbruecke: geht auf.");
@@ -127,6 +156,18 @@ public final class KonsolenReport {
             System.out.println("ACHTUNG - Abstimmbruecke geht NICHT auf. Differenz: "
                     + geld(m.brueckenDifferenz()));
         }
+    }
+
+    /**
+     * Breite der Produktspalte: der laengste Produktname, mindestens aber so breit,
+     * dass die Ueberschriften "Produkt" und "GESAMT" hineinpassen.
+     */
+    private static int produktspaltenbreite(Berichtsmodell m) {
+        int breite = MINDESTBREITE_PRODUKT;
+        for (Produktergebnis e : m.produkte()) {
+            breite = Math.max(breite, e.produkt().length());
+        }
+        return breite;
     }
 
     /** Geldbetrag mit Tausenderpunkt und zwei Nachkommastellen. */

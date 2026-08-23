@@ -77,7 +77,7 @@ class AbstimmbrueckeTest {
     /** Liest die echte CSV und laesst sie durch Validierung und Umwandlung laufen. */
     private static List<Datenzeile> echteDaten() throws IOException {
         Pruefprotokoll protokoll = new Validator()
-                .pruefe(new CsvEinleser().lies(Path.of("controlling_rohdaten.csv")));
+                .pruefe(new CsvEinleser().lies(Path.of("src", "test", "resources", "testdaten.csv")));
 
         return protokoll.verwertbareZeilen().stream()
                 .map(Datenzeile::aus)

@@ -1,6 +1,7 @@
 package de.leo.controlling.report;
 
-import de.leo.controlling.io.CsvEinleser;
+import de.leo.controlling.Testdaten;
+import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
@@ -10,7 +11,6 @@ import org.junit.jupiter.api.io.TempDir;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.time.LocalDateTime;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -19,60 +19,73 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * Prueft die geschriebene Excel-Datei, indem sie wieder eingelesen wird.
  *
- * <p>Das ist der einzige ehrliche Weg, eine Dateiausgabe zu testen: Nicht pruefen, ob
- * die Schreibmethode aufgerufen wurde, sondern ob am Ende eine Datei da ist, die sich
- * oeffnen laesst und die richtigen Werte enthaelt.
+ * <p>Das ist der einzige ehrliche Weg, eine Dateiausgabe zu testen: nicht pruefen, ob eine
+ * Methode aufgerufen wurde, sondern ob am Ende eine Datei da ist, die sich oeffnen laesst
+ * und die richtigen Werte enthaelt.
  *
  * <p>{@code @TempDir} legt fuer jeden Test ein eigenes Verzeichnis an und raeumt es
- * hinterher weg - so bleiben keine Testdateien im Projekt liegen.
+ * hinterher weg, sodass keine Testdateien im Projekt liegen bleiben.
  */
 class ExcelReportWriterTest {
-
-    private static final LocalDateTime STICHTAG = LocalDateTime.of(2025, 12, 31, 23, 59);
 
     @TempDir
     Path tempDir;
 
-    private static Berichtsmodell modell() throws IOException {
-        return new BerichtsmodellBauer().baue(
-                "controlling_rohdaten.csv",
-                new CsvEinleser().lies(Path.of("controlling_rohdaten.csv")),
-                STICHTAG);
+    private Path schreibeBericht() throws IOException {
+        Path ziel = tempDir.resolve("Monatsbericht.xlsx");
+        new ExcelReportWriter().schreibe(Testdaten.modell(), ziel);
+        return ziel;
     }
 
     @Test
     void schreibtEineLesbareDateiMitAllenTabs() throws IOException {
-        Path ziel = tempDir.resolve("Monatsbericht.xlsx");
-
-        new ExcelReportWriter().schreibe(modell(), ziel);
+        Path ziel = schreibeBericht();
 
         assertTrue(Files.exists(ziel), "Datei wurde nicht angelegt");
         assertTrue(Files.size(ziel) > 0, "Datei ist leer");
 
-        // Wieder oeffnen - gelingt das nicht, ist die Datei kaputt.
         try (Workbook wb = WorkbookFactory.create(ziel.toFile())) {
             assertEquals(8, wb.getNumberOfSheets());
-            assertNotNull(wb.getSheet("Abweichungsbruecke"));
-            assertNotNull(wb.getSheet("Zeitreihe"));
-            assertNotNull(wb.getSheet("Kostenstellen"));
-            assertNotNull(wb.getSheet("Rohdaten"));
-            assertNotNull(wb.getSheet("Deckblatt"));
-            assertNotNull(wb.getSheet("Datenqualitaet"));
-            assertNotNull(wb.getSheet("DB-Rechnung"));
-            assertNotNull(wb.getSheet("Abweichungsanalyse"));
+            for (String tab : new String[]{"Deckblatt", "Datenqualitaet", "DB-Rechnung",
+                    "Abweichungsanalyse", "Abweichungsbruecke", "Zeitreihe",
+                    "Kostenstellen", "Rohdaten"}) {
+                assertNotNull(wb.getSheet(tab), "Tab fehlt: " + tab);
+            }
+        }
+    }
+
+    @Test
+    void datenqualitaetsTabEnthaeltAlleBefunde() throws IOException {
+        try (Workbook wb = WorkbookFactory.create(schreibeBericht().toFile())) {
+            Sheet blatt = wb.getSheet("Datenqualitaet");
+
+            // Kopfzeile plus fuenf Befunde. getLastRowNum() ist null-basiert.
+            assertEquals(5, blatt.getLastRowNum(), "Kopfzeile + 5 Befunde");
+
+            assertEquals(9, (int) blatt.getRow(1).getCell(0).getNumericCellValue());
+            assertEquals("istMenge", blatt.getRow(1).getCell(1).getStringCellValue());
+            assertEquals("V02", blatt.getRow(1).getCell(2).getStringCellValue());
+        }
+    }
+
+    @Test
+    void deckblattZeigtBetriebsergebnisUndBruecke() throws IOException {
+        try (Workbook wb = WorkbookFactory.create(schreibeBericht().toFile())) {
+            Sheet blatt = wb.getSheet("Deckblatt");
+
+            // Als ZAHL, nicht als Text - sonst kann Excel nicht damit rechnen.
+            assertTrue(enthaeltZahl(blatt, 249000.00), "Plan-Betriebsergebnis fehlt");
+            assertTrue(enthaeltZahl(blatt, 968301.89), "Ist-Betriebsergebnis fehlt");
+            assertTrue(enthaeltText(blatt, "Abstimmbruecke"), "Brueckenhinweis fehlt");
         }
     }
 
     @Test
     void dbRechnungHatEineZeileJeProduktPlusSumme() throws IOException {
-        Path ziel = tempDir.resolve("Monatsbericht.xlsx");
-        new ExcelReportWriter().schreibe(modell(), ziel);
-
-        try (Workbook wb = WorkbookFactory.create(ziel.toFile())) {
+        try (Workbook wb = WorkbookFactory.create(schreibeBericht().toFile())) {
             Sheet blatt = wb.getSheet("DB-Rechnung");
 
-            // Kopfzeile + 4 Produkte + Summenzeile = 6 Zeilen, letzter Index 5.
-            assertEquals(5, blatt.getLastRowNum());
+            assertEquals(5, blatt.getLastRowNum(), "Kopfzeile + 4 Produkte + Summe");
             assertEquals("Produkt A", blatt.getRow(1).getCell(0).getStringCellValue());
             assertEquals("GESAMT", blatt.getRow(5).getCell(0).getStringCellValue());
         }
@@ -80,62 +93,52 @@ class ExcelReportWriterTest {
 
     @Test
     void abweichungsTabZeigtDieZerlegung() throws IOException {
-        Path ziel = tempDir.resolve("Monatsbericht.xlsx");
-        new ExcelReportWriter().schreibe(modell(), ziel);
-
-        try (Workbook wb = WorkbookFactory.create(ziel.toFile())) {
+        try (Workbook wb = WorkbookFactory.create(schreibeBericht().toFile())) {
             Sheet blatt = wb.getSheet("Abweichungsanalyse");
 
-            // Produkt A: Preisabweichung +2.660,00
-            assertEquals(2660.00, blatt.getRow(1).getCell(1).getNumericCellValue(), 0.005);
-            // Produkt B: Gesamtabweichung -16.175,64
-            assertEquals(-16175.64, blatt.getRow(2).getCell(5).getNumericCellValue(), 0.005);
-
+            assertEquals(480.00, blatt.getRow(1).getCell(1).getNumericCellValue(), 0.005);
+            assertEquals(-1198.38, blatt.getRow(1).getCell(5).getNumericCellValue(), 0.005);
             assertTrue(enthaeltText(blatt, "Abstimmbruecke"), "Brueckenhinweis fehlt");
         }
     }
 
     @Test
-    void datenqualitaetsTabEnthaeltAlleBefunde() throws IOException {
-        Path ziel = tempDir.resolve("Monatsbericht.xlsx");
-        new ExcelReportWriter().schreibe(modell(), ziel);
+    void rohdatenTabZeigtAlleZeilenMitStatus() throws IOException {
+        try (Workbook wb = WorkbookFactory.create(schreibeBericht().toFile())) {
+            Sheet blatt = wb.getSheet("Rohdaten");
 
-        try (Workbook wb = WorkbookFactory.create(ziel.toFile())) {
-            Sheet blatt = wb.getSheet("Datenqualitaet");
+            assertEquals(18, blatt.getLastRowNum(), "Kopfzeile + 18 Rohzeilen");
 
-            // Kopfzeile plus sieben Befunde. getLastRowNum() ist NULL-basiert:
-            // bei acht Zeilen liefert es 7.
-            assertEquals(7, blatt.getLastRowNum(),
-                    "erwartet: Kopfzeile + 7 Befunde");
-
-            // Erste Datenzeile ist Befund 1: Zeile 14, V05, istPreis
-            assertEquals(14, (int) blatt.getRow(1).getCell(0).getNumericCellValue());
-            assertEquals("istPreis", blatt.getRow(1).getCell(1).getStringCellValue());
-            assertEquals("V05", blatt.getRow(1).getCell(2).getStringCellValue());
+            assertEquals("OK", statusVonZeile(blatt, 2));
+            assertEquals("FEHLER", statusVonZeile(blatt, 9), "leeres istMenge");
+            assertEquals("FEHLER", statusVonZeile(blatt, 19), "negativer Preis");
+            assertEquals("FEHLER", statusVonZeile(blatt, 5), "Dublette");
+            assertEquals("WARNUNG", statusVonZeile(blatt, 17), "Ausreisser");
         }
     }
 
-    @Test
-    void deckblattZeigtBetriebsergebnisUndBruecke() throws IOException {
-        Path ziel = tempDir.resolve("Monatsbericht.xlsx");
-        new ExcelReportWriter().schreibe(modell(), ziel);
-
-        try (Workbook wb = WorkbookFactory.create(ziel.toFile())) {
-            Sheet blatt = wb.getSheet("Deckblatt");
-
-            // Irgendwo auf dem Blatt muessen 753.000,00 (Plan) und 1.483.331,65 (Ist)
-            // als ZAHL stehen - nicht als Text, sonst kann Excel nicht damit rechnen.
-            assertTrue(enthaeltZahl(blatt, 753000.00), "Plan-Betriebsergebnis fehlt");
-            assertTrue(enthaeltZahl(blatt, 1483331.65), "Ist-Betriebsergebnis fehlt");
-
-            assertTrue(enthaeltText(blatt, "Abstimmbruecke"), "Brueckenhinweis fehlt");
+    /**
+     * Sucht die Zeile ueber ihre CSV-Zeilennummer in Spalte 0.
+     *
+     * <p>Nicht ueber die Position im Blatt: Die verschiebt sich um die Kopfzeile und
+     * bei jeder Aenderung der Reihenfolge. Der Test soll pruefen, WAS in der Zeile
+     * steht, nicht WO sie steht.
+     */
+    private static String statusVonZeile(Sheet blatt, int csvZeile) {
+        for (var row : blatt) {
+            var erste = row.getCell(0);
+            if (erste != null && erste.getCellType() == CellType.NUMERIC
+                    && (int) erste.getNumericCellValue() == csvZeile) {
+                return row.getCell(1).getStringCellValue();
+            }
         }
+        throw new AssertionError("Zeile " + csvZeile + " fehlt im Rohdaten-Tab");
     }
 
     private static boolean enthaeltZahl(Sheet blatt, double gesucht) {
         for (var row : blatt) {
             for (var cell : row) {
-                if (cell.getCellType() == org.apache.poi.ss.usermodel.CellType.NUMERIC
+                if (cell.getCellType() == CellType.NUMERIC
                         && Math.abs(cell.getNumericCellValue() - gesucht) < 0.005) {
                     return true;
                 }
@@ -147,7 +150,7 @@ class ExcelReportWriterTest {
     private static boolean enthaeltText(Sheet blatt, String teil) {
         for (var row : blatt) {
             for (var cell : row) {
-                if (cell.getCellType() == org.apache.poi.ss.usermodel.CellType.STRING
+                if (cell.getCellType() == CellType.STRING
                         && cell.getStringCellValue().contains(teil)) {
                     return true;
                 }

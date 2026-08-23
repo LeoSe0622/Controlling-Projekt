@@ -1,50 +1,62 @@
 monat,produkt,kostenstelle,plan_menge,ist_menge,plan_preis,ist_preis,variable_stueckkosten,fixkosten_produkt
-2025-04,Produkt C,Vertrieb Sued,2000,2018.0,25.0,26.94,12.0,2000
-2025-05,Produkt C,Vertrieb Sued,2000,,25.0,23.49,12.0,2000
-2025-12,Produkt C,Vertrieb Nord,2000,2145.0,25.0,25.32,12.0,2000
-2025-08,Produkt D,Vertrieb Nord,350,,120.0,119.4,70.0,4000
-2025-10,Produkt D,Vertrieb Sued,350,340.0,120.0,124.95,70.0,4000
-2025-06,Produkt B,Vertrieb Sued,600,699.0,80.0,80.41,45.0,3000
-2025-11,Produkt B,Vertrieb Nord,600,576.0,80.0,83.2,45.0,3000
-2025-01,Produkt C,Vertrieb Sued,2000,1929.0,25.0,-26.39,12.0,2000
-2025-10,Produkt B,Vertrieb Sued,600,581.0,80.0,77.43,45.0,3000
-2025-10,Produkt A,Vertrieb Sued,1000,1004.0,50.0,49.07,30.0,5000
-2025-08,Produkt C,Vertrieb Sued,2000,2156.0,25.0,24.62,12.0,2000
-2025-02,Produkt C,Vertrieb Nord,2000,1852.0,25.0,27.03,12.0,2000
-2025-05,Produkt D,Vertrieb Nord,350,,120.0,130.74,70.0,4000
-2025-01,Produkt B,Vertrieb Nord,600,683.0,80.0,81.3,45.0,3000
-2025-08,Produkt B,Vertrieb Sued,600,625.0,80.0,85.9,45.0,3000
-2025-03,Produkt D,Vertrieb Nord,350,375.0,120.0,113.14,70.0,4000
-2025-05,Produkt B,Vertrieb Nord,600,594.0,80.0,74.69,45.0,3000
-2025-09,Produkt B,Vertrieb Nord,600,624.0,80.0,84.61,45.0,3000
-2025-09,Produkt C,Vertrieb Sued,2000,1939.0,25.0,25.69,12.0,2000
-2025-04,Produkt D,Vertrieb Sued,350,325.0,120.0,121.36,70.0,4000
-2025-01,Produkt D,Vertrieb Sued,350,282.0,120.0,117.94,70.0,4000
-2025-12,Produkt A,Vertrieb Nord,1000,860.0,50.0,49.18,30.0,5000
-2025-03,Produkt A,Vertrieb Nord,1000,994.0,50.0,46.2,30.0,5000
-2025-03,Produkt B,Vertrieb Sued,600,671.0,80.0,82.39,45.0,3000
-2025-01,Produkt A,Vertrieb Nord,1000,954.0,50.0,53.39,30.0,5000
-2025-12,Produkt D,Vertrieb Sued,350,378.0,120.0,121.34,70.0,4000
-2025-07,Produkt D,Vertrieb Sued,350,316.0,120.0,120.96,70.0,4000
-2025-02,Produkt B,Vertrieb Nord,600,593.0,80.0,78.02,45.0,3000
-2025-06,Produkt A,Vertrieb Sued,1000,1061.0,50.0,50.79,30.0,5000
-2025-12,Produkt B,Vertrieb Sued,600,664.0,80.0,80.9,45.0,3000
-2025-01,Produkt A,Vertrieb Nord,1000,954.0,50.0,53.39,30.0,5000
-2025-09,Produkt D,Vertrieb Nord,350,329.0,120.0,114.18,70.0,4000
-2025-11,Produkt A,Vertrieb Sued,1000,1024.0,50.0,50.51,30.0,5000
-2025-04,Produkt B,Vertrieb Nord,600,566.0,80.0,74.32,45.0,3000
-2025-02,Produkt A,Vertrieb Nord,1000,881.0,50.0,52.14,30.0,5000
-2025-09,Produkt A,Vertrieb Nord,1000,1070.0,50.0,45.7,30.0,5000
-2025-06,Produkt D,Vertrieb Nord,350,328.0,120.0,123.82,70.0,4000
-2025-07,Produkt B,Vertrieb Sued,600,613.0,80.0,82.78,45.0,3000
-2025-07,Produkt C,Vertrieb Sued,2000,99900.0,25.0,25.2,12.0,2000
-2025-05,Produkt A,Vertrieb Nord,1000,1160.0,50.0,49.94,30.0,5000
-2025-03,Produkt C,Vertrieb Sued,2000,1806.0,25.0,26.48,12.0,2000
-2025-08,Produkt A,Vertrieb Sued,1000,968.0,50.0,50.54,30.0,5000
-2025-11,Produkt C,Vertrieb Sued,2000,2414.0,25.0,25.68,12.0,2000
-2025-10,Produkt C,Vertrieb Nord,2000,1901.0,25.0,24.09,12.0,2000
-2025-02,Produkt D,Vertrieb Nord,350,411.0,120.0,130.5,70.0,4000
-2025-06,Produkt C,Vertrieb Sued,2000,1918.0,25.0,25.75,12.0,2000
-2025-04,Produkt A,Vertrieb Nord,1000,973.0,50.0,49.38,30.0,5000
-2025-07,Produkt A,Vertrieb Nord,1000,881.0,50.0,49.94,30.0,5000
-2025-11,Produkt D,Vertrieb Sued,350,349.0,120.0,120.16,70.0,4000
+2026-11,Buerostuhl Basic,Vertrieb Ost,400,415.0,120.0,122.89,70.0,3000
+2026-07,Buerostuhl Basic,Vertrieb Online,400,18550.0,120.0,117.87,70.0,3000
+2026-09,Tastatur Wireless,Vertrieb West,1200,1365.0,45.0,44.62,18.0,1200
+2026-03,Monitor 27 Zoll,Vertrieb Ost,300,283.0,280.0,284.49,160.0,4000
+2026-06,Buerostuhl Premium,Vertrieb Ost,150,146.0,350.0,330.34,180.0,6000
+2026-09,Buerostuhl Basic,Vertrieb West,400,395.0,120.0,119.6,70.0,3000
+2026-04,Tastatur Wireless,Vertrieb Ost,1200,1034.0,45.0,46.6,18.0,1200
+2026-01,Schreibtisch Elektrisch,Vertrieb West,90,89.0,650.0,700.72,380.0,8000
+2026-04,Buerostuhl Premium,Vertrieb Online,150,150.0,350.0,366.88,180.0,6000
+2026-02,Buerostuhl Basic,Vertrieb Online,400,369.0,120.0,125.53,70.0,3000
+2026-09,Buerostuhl Premium,Vertrieb Online,150,166.0,350.0,335.14,180.0,6000
+2026-02,Monitor 27 Zoll,Vertrieb West,300,253.0,280.0,269.04,160.0,4000
+2026-09,Monitor 27 Zoll,Vertrieb West,300,304.0,280.0,268.06,160.0,4000
+2026-05,Buerostuhl Premium,Vertrieb West,150,144.0,350.0,323.07,180.0,6000
+2026-06,Schreibtisch Elektrisch,Vertrieb Ost,90,87.0,650.0,649.7,380.0,8000
+2026-11,Buerostuhl Premium,Vertrieb Ost,150,136.0,350.0,368.91,180.0,6000
+2026-05,Buerostuhl Basic,Vertrieb Online,400,419.0,120.0,117.5,70.0,3000
+2026-09,Schreibtisch Elektrisch,Vertrieb West,90,86.0,650.0,682.52,380.0,8000
+2026-05,Tastatur Wireless,Vertrieb West,1200,1067.0,45.0,46.13,18.0,1200
+2026-11,Monitor 27 Zoll,Vertrieb West,300,319.0,280.0,303.98,160.0,4000
+2026-12,Tastatur Wireless,Vertrieb West,1200,1175.0,45.0,44.19,18.0,1200
+2026-03,Buerostuhl Basic,Vertrieb Online,400,375.0,120.0,117.45,70.0,3000
+2026-10,Buerostuhl Basic,Vertrieb Ost,400,456.0,120.0,111.02,70.0,3000
+2026-05,Schreibtisch Elektrisch,Vertrieb Ost,90,73.0,650.0,630.21,380.0,8000
+2026-06,Tastatur Wireless,Vertrieb West,1200,1218.0,45.0,44.83,18.0,1200
+2026-03,Tastatur Wireless,Vertrieb Online,1200,1262.0,45.0,41.35,18.0,1200
+2026-06,Tastatur Wireless,Vertrieb West,1200,1218.0,45.0,44.83,18.0,1200
+2026-12,Buerostuhl Basic,Vertrieb Online,400,370.0,120.0,116.63,70.0,3000
+2026-07,Schreibtisch Elektrisch,Vertrieb Ost,90,96.0,650.0,653.91,380.0,8000
+2026-02,Buerostuhl Premium,Vertrieb West,150,134.0,350.0,347.35,180.0,6000
+2026-12,Schreibtisch Elektrisch,Vertrieb Ost,90,81.0,650.0,611.45,380.0,8000
+2026-08,Schreibtisch Elektrisch,Vertrieb Ost,90,89.0,650.0,654.34,380.0,8000
+2026-11,Tastatur Wireless,Vertrieb Ost,1200,1377.0,45.0,44.37,18.0,1200
+2026-07,Monitor 27 Zoll,Vertrieb Online,300,283.0,280.0,287.5,160.0,4000
+2026-08,Monitor 27 Zoll,Vertrieb Ost,300,291.0,280.0,287.33,160.0,4000
+2026-03,Schreibtisch Elektrisch,Vertrieb West,90,82.0,650.0,594.98,380.0,8000
+2026-12,Monitor 27 Zoll,Vertrieb West,300,273.0,280.0,276.7,160.0,4000
+2026-06,Monitor 27 Zoll,Vertrieb Online,300,271.0,280.0,280.05,160.0,4000
+2026-07,Buerostuhl Premium,Vertrieb Online,150,168.0,350.0,356.54,180.0,6000
+2026-10,Buerostuhl Premium,Vertrieb Ost,150,143.0,350.0,337.69,180.0,6000
+2026-06,Buerostuhl Basic,Vertrieb Ost,400,415.0,120.0,118.69,70.0,3000
+2026-02,Schreibtisch Elektrisch,Vertrieb West,90,86.0,650.0,702.22,380.0,8000
+2026-10,Monitor 27 Zoll,Vertrieb Ost,300,,280.0,270.65,160.0,4000
+2026-02,Tastatur Wireless,Vertrieb Online,1200,1228.0,45.0,46.24,18.0,1200
+2026-08,Tastatur Wireless,Vertrieb Online,1200,1244.0,45.0,42.29,18.0,1200
+2026-11,Schreibtisch Elektrisch,Vertrieb Ost,90,96.0,650.0,697.39,380.0,8000
+2026-10,Tastatur Wireless,Vertrieb Ost,1200,,45.0,41.3,18.0,1200
+2026-03,Buerostuhl Premium,Vertrieb Ost,150,129.0,350.0,346.89,180.0,6000
+2026-04,Monitor 27 Zoll,Vertrieb Ost,300,262.0,280.0,280.73,160.0,4000
+2026-08,Buerostuhl Basic,Vertrieb West,400,400.0,120.0,119.36,70.0,3000
+2026-10,Schreibtisch Elektrisch,Vertrieb Ost,90,83.0,650.0,629.43,380.0,8000
+2026-01,Tastatur Wireless,Vertrieb Online,1200,1217.0,45.0,45.2,18.0,1200
+2026-04,Buerostuhl Basic,Vertrieb Online,400,393.0,120.0,115.05,70.0,3000
+2026-08,Buerostuhl Premium,Vertrieb West,150,157.0,350.0,344.45,180.0,6000
+2026-01,Buerostuhl Premium,Vertrieb West,150,159.0,350.0,345.58,180.0,6000
+2026-12,Buerostuhl Premium,Vertrieb Ost,150,154.0,350.0,328.96,180.0,6000
+2026-04,Schreibtisch Elektrisch,Vertrieb Online,90,96.0,650.0,623.84,380.0,8000
+2026-05,Monitor 27 Zoll,Vertrieb Ost,300,234.0,280.0,-277.72,160.0,4000
+2026-01,Buerostuhl Basic,Vertrieb West,400,388.0,120.0,119.45,70.0,3000
+2026-01,Monitor 27 Zoll,Vertrieb West,300,337.0,280.0,271.88,160.0,4000
+2026-07,Tastatur Wireless,Vertrieb West,1200,,45.0,46.8,18.0,1200
