@@ -7,6 +7,8 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
+import org.apache.poi.xssf.usermodel.XSSFChart;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -185,6 +187,63 @@ class ExcelReportWriterTest {
         }
     }
 
+    /**
+     * Die Abweichungsspalte ist die Datenquelle des Diagramms - sie muss zu den beiden
+     * Spalten links davon passen, sonst zeigt das Deckblatt etwas anderes als die Tabelle.
+     */
+    @Test
+    void zeitreiheHatEineAbweichungsspalteDieZuPlanUndIstPasst() throws IOException {
+        try (Workbook wb = WorkbookFactory.create(schreibeBericht().toFile())) {
+            Sheet blatt = wb.getSheet("Zeitreihe");
+
+            assertEquals("Gesamt Abweichung", blatt.getRow(0).getCell(3).getStringCellValue());
+
+            double summe = 0;
+            for (int i = 1; i <= blatt.getLastRowNum(); i++) {
+                Row r = blatt.getRow(i);
+                double plan = r.getCell(1).getNumericCellValue();
+                double ist = r.getCell(2).getNumericCellValue();
+                double abweichung = r.getCell(3).getNumericCellValue();
+
+                assertEquals(ist - plan, abweichung, 0.005,
+                        "Monat " + r.getCell(0).getStringCellValue());
+                summe += abweichung;
+            }
+
+            assertEquals(719301.89, summe, 0.005, "Summe = Gesamtabweichung des Berichts");
+        }
+    }
+
+    /**
+     * Auf dem Deckblatt liegt ein echtes Excel-Diagramm, kein Bild.
+     *
+     * <p>Geprueft wird, dass es die Datei ueberlebt: geschrieben, wieder eingelesen, und
+     * die Serie zeigt auf die Abweichungsspalte der Zeitreihe. Ein Diagramm, das auf den
+     * falschen Bereich zeigt, sieht in der Datei plausibel aus und zeigt trotzdem Unsinn.
+     */
+    @Test
+    void deckblattTraegtEinLiniendiagramm() throws IOException {
+        try (Workbook wb = WorkbookFactory.create(schreibeBericht().toFile())) {
+            XSSFSheet deckblatt = (XSSFSheet) wb.getSheet("Deckblatt");
+
+            List<XSSFChart> diagramme = deckblatt.getDrawingPatriarch().getCharts();
+            assertEquals(1, diagramme.size(), "genau ein Diagramm auf dem Deckblatt");
+
+            String xml = diagramme.get(0).getCTChart().toString();
+
+            assertTrue(xml.contains("lineChart"), "es muss ein Liniendiagramm sein");
+            assertTrue(xml.contains("Zeitreihe!$D$2:$D$5"),
+                    "die Serie muss auf die Abweichungsspalte der Zeitreihe zeigen - "
+                            + "vier Monate in der Testdatei, also D2 bis D5");
+            assertTrue(xml.contains("Zeitreihe!$A$2:$A$5"),
+                    "die Beschriftung muss aus der Monatsspalte kommen");
+            assertTrue(xml.contains("crosses val=\"autoZero\""),
+                    "ohne kreuzende Nullachse gibt es keine sichtbare Nulllinie");
+            assertTrue(xml.contains("smooth val=\"false\""),
+                    "geglaettete Linien taeuschen einen Verlauf zwischen Monaten vor");
+        }
+    }
+
     @Test
     void rohdatenTabZeigtAlleZeilenMitStatus() throws IOException {
         try (Workbook wb = WorkbookFactory.create(schreibeBericht().toFile())) {
@@ -222,6 +281,33 @@ class ExcelReportWriterTest {
             Cell leer = zeileMitNummer(blatt, 9).getCell(6);
             assertNotEquals(CellType.NUMERIC, leer.getCellType(),
                     "ein leeres Feld ist keine Zahl - eine 0 waere eine erfundene Angabe");
+        }
+    }
+
+    /**
+     * Keine Spalte wird unlesbar breit - auf keinem Tab.
+     *
+     * <p>Der Fall, den dieser Test festhaelt: Ein Hinweissatz von 216 Zeichen stand in
+     * Spalte A des Deckblatts und zog sie auf 177 Zeichen auf, weil
+     * {@code autoSizeColumn} die LAENGSTE Zelle misst. Das Blatt passte auf keinen
+     * Bildschirm mehr, und das Diagramm rutschte aus dem Bild. Ein neuer Hinweis an einer
+     * neuen Stelle wuerde denselben Fehler wieder einbauen, ohne dass es auffaellt -
+     * Spaltenbreiten sieht man nur, wenn man die Datei oeffnet.
+     */
+    @Test
+    void keineSpalteWirdUnlesbarBreit() throws IOException {
+        try (Workbook wb = WorkbookFactory.create(schreibeBericht().toFile())) {
+            for (int s = 0; s < wb.getNumberOfSheets(); s++) {
+                Sheet blatt = wb.getSheetAt(s);
+
+                for (int spalte = 0; spalte < 20; spalte++) {
+                    int zeichen = blatt.getColumnWidth(spalte) / 256;
+
+                    assertTrue(zeichen <= 40,
+                            blatt.getSheetName() + ", Spalte " + spalte + ": "
+                                    + zeichen + " Zeichen breit");
+                }
+            }
         }
     }
 

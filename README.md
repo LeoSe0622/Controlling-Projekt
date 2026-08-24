@@ -89,6 +89,15 @@ Acht Tabs, jeder beantwortet eine Frage:
 | **Kostenstellen** | Wie stehen die Vertriebsregionen da? |
 | **Rohdaten** | Was stand tatsächlich in der Datei? |
 
+Auf dem Deckblatt steht rechts neben den Kennzahlen ein **Liniendiagramm: die Abweichung
+gegen den Plan je Monat**, gegen eine Nulllinie. Oben heißt besser als geplant, unten
+schlechter. Eine Linie statt zwei — Plan und Ist nebeneinander ergäben zwei fast
+deckungsgleiche Kurven, und die interessante Größe ist ihr Abstand.
+
+Es ist ein echtes Excel-Diagramm, kein Bild: anklickbar, umformatierbar, erweiterbar. Seine
+Daten liest es aus der Spalte `Gesamt Abweichung` der Zeitreihe — es gibt keine zweite
+Kopie der Zahlen, die auseinanderlaufen könnte.
+
 Empfohlene Lesereihenfolge: **erst das Deckblatt.** Dort steht die Qualitätsquote — man
 sollte wissen, auf wie vielen Zeilen die Zahlen beruhen, *bevor* man die Euro-Beträge liest.
 
@@ -210,6 +219,7 @@ Die Formeln und Regeln stehen im Code, jeweils im Javadoc der zuständigen Klass
 | Ab wann ist eine Abweichung wesentlich? | `Wesentlichkeit.bewerte` |
 | Woher kommt die Euro-Schwelle ohne Angabe? | `Wesentlichkeit.fuer` |
 | Wie belastbar ist die Kernaussage? | `Warnzeileneinfluss` |
+| Warum zeigt das Diagramm eine Linie und nicht zwei? | `ExcelReportWriter.abweichungsdiagramm` |
 
 ## Bewusst nicht gebaut
 
@@ -225,5 +235,5 @@ Diese Liste beantwortet die Frage „vergessen oder Absicht?":
 | **PDF-Ausgabe** | Excel ist das Format, in dem weitergearbeitet wird. Ein PDF erzeugt man daraus in zwei Klicks. |
 | **Web-Frontend** | Ein Bericht je Monat rechtfertigt keinen Server. |
 | **Mehrere Währungen** | Alle Beträge sind Euro. Währungen einzuführen hieße, jeden Betrag mit seiner Währung zu führen und Umrechnungskurse zu datieren — ein eigenes Thema. |
-| **Diagramme im Excel** | In der Zeitreihe die drei linken Spalten markieren und `Alt+F1` drücken liefert dasselbe. Rund 60 Zeilen POI-Code dafür wären schlecht investiert. |
+| **Weitere Diagramme** | Das Deckblatt trägt eines — die Abweichung je Monat. Für alles andere (einzelne Produkte, Kostenstellen) in der Zeitreihe die gewünschten Spalten markieren und `Alt+F1` drücken. Je Auswertung ein fest verdrahtetes Diagramm zu bauen kostet mehr, als es einbringt. |
 | **Anführungszeichen im CSV-Parser** | Siehe Javadoc von `CsvEinleser`. Kommt eine Quelle mit Kommas in Textfeldern dazu, gehört dort eine CSV-Bibliothek her. |

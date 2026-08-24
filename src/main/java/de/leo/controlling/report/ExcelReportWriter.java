@@ -13,6 +13,22 @@ import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.util.CellRangeAddress;
+import org.apache.poi.xddf.usermodel.chart.AxisCrosses;
+import org.apache.poi.xddf.usermodel.chart.AxisPosition;
+import org.apache.poi.xddf.usermodel.chart.AxisTickLabelPosition;
+import org.apache.poi.xddf.usermodel.chart.AxisTickMark;
+import org.apache.poi.xddf.usermodel.chart.ChartTypes;
+import org.apache.poi.xddf.usermodel.chart.MarkerStyle;
+import org.apache.poi.xddf.usermodel.chart.XDDFCategoryAxis;
+import org.apache.poi.xddf.usermodel.chart.XDDFDataSource;
+import org.apache.poi.xddf.usermodel.chart.XDDFDataSourcesFactory;
+import org.apache.poi.xddf.usermodel.chart.XDDFLineChartData;
+import org.apache.poi.xddf.usermodel.chart.XDDFNumericalDataSource;
+import org.apache.poi.xddf.usermodel.chart.XDDFValueAxis;
+import org.apache.poi.xssf.usermodel.XSSFChart;
+import org.apache.poi.xssf.usermodel.XSSFDrawing;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import java.io.IOException;
@@ -46,6 +62,9 @@ public final class ExcelReportWriter {
     private static final DateTimeFormatter ZEITSTEMPEL =
             DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm");
 
+    /** Obergrenze fuer automatisch berechnete Spaltenbreiten, in Zeichen. */
+    private static final int MAX_SPALTENBREITE = 40;
+
     /**
      * @param m    das fertige Berichtsmodell
      * @param ziel Pfad der zu schreibenden .xlsx-Datei
@@ -65,6 +84,10 @@ public final class ExcelReportWriter {
             zeitreihe(wb, f, m);
             kostenstellen(wb, f, m);
             rohdaten(wb, f, m);
+
+            // Zum Schluss, nicht in deckblatt(): Das Diagramm zeigt auf Zellen der
+            // Zeitreihe, und die muss es dafuer schon geben.
+            abweichungsdiagramm(wb, m);
 
             wb.write(out);
         }
@@ -143,8 +166,7 @@ public final class ExcelReportWriter {
                     f.fehler);
         }
 
-        blatt.autoSizeColumn(0);
-        blatt.autoSizeColumn(1);
+        breiten(blatt, 2);
     }
 
     /**
@@ -228,9 +250,7 @@ public final class ExcelReportWriter {
 
         blatt.createFreezePane(0, 1);
 
-        for (int i = 0; i < spalten.length; i++) {
-            blatt.autoSizeColumn(i);
-        }
+        breiten(blatt, spalten.length);
     }
 
     /**
@@ -306,9 +326,7 @@ public final class ExcelReportWriter {
                 m.gesamtIst().dbZwei().subtract(m.gesamtPlan().dbZwei()), f.geld);
 
         blatt.createFreezePane(1, 1);
-        for (int i = 0; i < spalten.length; i++) {
-            blatt.autoSizeColumn(i);
-        }
+        breiten(blatt, spalten.length);
     }
 
     /** Tab 4: Zerlegung der Abweichung je Produkt, mit farbiger Ampel. */
@@ -360,9 +378,7 @@ public final class ExcelReportWriter {
         }
 
         blatt.createFreezePane(1, 1);
-        for (int i = 0; i < spalten.length; i++) {
-            blatt.autoSizeColumn(i);
-        }
+        breiten(blatt, spalten.length);
     }
 
     /**
@@ -419,9 +435,7 @@ public final class ExcelReportWriter {
                     f.fehler);
         }
 
-        for (int i = 0; i < spalten.length; i++) {
-            blatt.autoSizeColumn(i);
-        }
+        breiten(blatt, spalten.length);
     }
 
     /**
@@ -432,9 +446,10 @@ public final class ExcelReportWriter {
      * soll man MARKIEREN und daraus mit zwei Klicks ein Liniendiagramm machen koennen -
      * dafuer braucht es das breite Format.
      *
-     * <p>Die beiden Summenspalten stehen VORN, direkt neben dem Monat: Das ist die Kurve,
-     * die man zuerst sehen will, und so laesst sie sich markieren, ohne durch dreissig
-     * Produktspalten zu scrollen.
+     * <p>Die drei Summenspalten stehen VORN, direkt neben dem Monat: Das sind die Kurven,
+     * die man zuerst sehen will, und so lassen sie sich markieren, ohne durch dreissig
+     * Produktspalten zu scrollen. Die Spalte "Gesamt Abweichung" ist zugleich die
+     * Datenquelle des Diagramms auf dem Deckblatt - siehe {@link #abweichungsdiagramm}.
      *
      * <p>Das Layout folgt dem Zweck, nicht einer Regel.
      */
@@ -446,9 +461,10 @@ public final class ExcelReportWriter {
         text(blatt, 0, 0, "Monat", f.kopfzeile);
         text(blatt, 0, 1, "Gesamt Plan", f.kopfzeile);
         text(blatt, 0, 2, "Gesamt Ist", f.kopfzeile);
+        text(blatt, 0, 3, "Gesamt Abweichung", f.kopfzeile);
         for (int p = 0; p < produkte.size(); p++) {
-            text(blatt, 0, 3 + p * 2, produkte.get(p).produkt() + " Plan", f.kopfzeile);
-            text(blatt, 0, 4 + p * 2, produkte.get(p).produkt() + " Ist", f.kopfzeile);
+            text(blatt, 0, 4 + p * 2, produkte.get(p).produkt() + " Plan", f.kopfzeile);
+            text(blatt, 0, 5 + p * 2, produkte.get(p).produkt() + " Ist", f.kopfzeile);
         }
 
         List<YearMonth> monate = m.zeitreihe().stream()
@@ -475,19 +491,81 @@ public final class ExcelReportWriter {
                 if (treffer != null) {
                     summePlan = summePlan.add(treffer.plan().dbZwei());
                     summeIst = summeIst.add(treffer.ist().dbZwei());
-                    zahl(blatt, z + 1, 3 + p * 2, treffer.plan().dbZwei(), f.geld);
-                    zahl(blatt, z + 1, 4 + p * 2, treffer.ist().dbZwei(), f.geld);
+                    zahl(blatt, z + 1, 4 + p * 2, treffer.plan().dbZwei(), f.geld);
+                    zahl(blatt, z + 1, 5 + p * 2, treffer.ist().dbZwei(), f.geld);
                 }
             }
 
             zahl(blatt, z + 1, 1, summePlan, f.geld);
             zahl(blatt, z + 1, 2, summeIst, f.geld);
+            zahl(blatt, z + 1, 3, summeIst.subtract(summePlan), f.geld);
         }
 
-        blatt.createFreezePane(3, 1);
-        for (int i = 0; i <= 2 + produkte.size() * 2; i++) {
-            blatt.autoSizeColumn(i);
+        blatt.createFreezePane(4, 1);
+        breiten(blatt, 4 + produkte.size() * 2);
+    }
+
+    /**
+     * Das Liniendiagramm auf dem Deckblatt: die Abweichung je Monat gegen eine Nulllinie.
+     *
+     * <p>Eine Serie, nicht zwei. Plan und Ist nebeneinander zu zeichnen zeigt zwei fast
+     * deckungsgleiche Linien - die interessante Groesse ist ihr Abstand, und der laesst
+     * sich schlecht abschaetzen. Als eigene Linie gegen die Null wird er direkt ablesbar:
+     * oben besser als geplant, unten schlechter.
+     *
+     * <p>Die Daten stehen in der Zeitreihe, nicht in einem eigenen Block auf dem
+     * Deckblatt. Ein Diagramm zeigt immer auf Zellen; zeigte es auf eine zweite Kopie
+     * derselben Zahlen, gaebe es zwei Wahrheiten, die auseinander laufen koennen.
+     *
+     * <p>Drei Einstellungen sind nicht Geschmack, sondern noetig:
+     * <ul>
+     *   <li>{@code setSmooth(false)} - POI rundet Linien sonst weich und taeuscht damit
+     *       einen Verlauf zwischen Monaten vor, den es nicht gibt.</li>
+     *   <li>{@code AxisCrosses.AUTO_ZERO} - laesst die Kategorienachse bei null kreuzen.
+     *       Erst dadurch gibt es ueberhaupt eine sichtbare Nulllinie.</li>
+     *   <li>{@code AxisTickLabelPosition.LOW} - haelt die Monatsbeschriftung am unteren
+     *       Rand. Ohne sie sitzt sie auf der Nulllinie mitten im Bild.</li>
+     * </ul>
+     */
+    private void abweichungsdiagramm(XSSFWorkbook wb, Berichtsmodell m) {
+
+        XSSFSheet deckblatt = wb.getSheet("Deckblatt");
+        XSSFSheet zeitreihe = wb.getSheet("Zeitreihe");
+
+        int letzteZeile = zeitreihe.getLastRowNum();
+        if (letzteZeile < 1) {
+            return;
         }
+
+        XSSFDrawing zeichnung = deckblatt.createDrawingPatriarch();
+        XSSFChart chart = zeichnung.createChart(
+                zeichnung.createAnchor(0, 0, 0, 0, 3, 1, 14, 22));
+
+        chart.setTitleText("Abweichung gegen Plan je Monat (Ist - Plan, DB II)");
+        chart.setTitleOverlay(false);
+
+        XDDFCategoryAxis unten = chart.createCategoryAxis(AxisPosition.BOTTOM);
+        unten.setTickLabelPosition(AxisTickLabelPosition.LOW);
+        unten.setMajorTickMark(AxisTickMark.NONE);
+
+        XDDFValueAxis links = chart.createValueAxis(AxisPosition.LEFT);
+        links.setCrosses(AxisCrosses.AUTO_ZERO);
+
+        XDDFDataSource<String> monate = XDDFDataSourcesFactory.fromStringCellRange(
+                zeitreihe, new CellRangeAddress(1, letzteZeile, 0, 0));
+        XDDFNumericalDataSource<Double> werte = XDDFDataSourcesFactory.fromNumericCellRange(
+                zeitreihe, new CellRangeAddress(1, letzteZeile, 3, 3));
+
+        XDDFLineChartData daten =
+                (XDDFLineChartData) chart.createData(ChartTypes.LINE, unten, links);
+
+        XDDFLineChartData.Series linie =
+                (XDDFLineChartData.Series) daten.addSeries(monate, werte);
+        linie.setTitle("Abweichung", null);
+        linie.setSmooth(false);
+        linie.setMarkerStyle(MarkerStyle.NONE);
+
+        chart.plot(daten);
     }
 
     /** Tab 7: Ergebnis je Kostenstelle - die zweite Sicht auf dieselben Daten. */
@@ -524,9 +602,7 @@ public final class ExcelReportWriter {
                         + "Aussagekraeftig ist vor allem der DB I.",
                 null);
 
-        for (int i = 0; i < spalten.length; i++) {
-            blatt.autoSizeColumn(i);
-        }
+        breiten(blatt, spalten.length);
     }
 
     /**
@@ -580,9 +656,7 @@ public final class ExcelReportWriter {
         }
 
         blatt.createFreezePane(2, 1);
-        for (int i = 0; i < spalten.length; i++) {
-            blatt.autoSizeColumn(i);
-        }
+        breiten(blatt, spalten.length);
     }
 
     /** Schreibt Text in eine Zelle und legt Zeile/Zelle bei Bedarf an. */
@@ -642,6 +716,34 @@ public final class ExcelReportWriter {
                                           BigDecimal wert, CellStyle stil) {
         if (wert != null) {
             zahl(blatt, zeile, spalte, wert, stil);
+        }
+    }
+
+    /**
+     * Passt die Spaltenbreiten an den Inhalt an - bis zu einer Obergrenze.
+     *
+     * <p>{@code autoSizeColumn} misst die LAENGSTE Zelle einer Spalte. In Spalte A steht
+     * aber nicht nur eine Beschriftung, sondern auch der Hinweissatz unter der Tabelle -
+     * auf dem Deckblatt 216 Zeichen lang. Ohne Obergrenze wurde die Spalte 177 Zeichen
+     * breit und das Blatt passte auf keinen Bildschirm mehr. Auf dem Deckblatt schob das
+     * zusaetzlich das Diagramm nach rechts aus dem Bild, weil es bei Spalte D ankert.
+     *
+     * <p>Der gekappte Text geht nicht verloren: Ist die Nachbarzelle leer - und das ist
+     * sie bei jedem dieser Hinweise -, laesst Excel ihn nach rechts ueberlaufen. Sichtbar
+     * bleibt er vollstaendig, er treibt die Spalte nur nicht mehr auseinander.
+     *
+     * <p>Der Preis: Ein echter Tabellenwert von ueber 40 Zeichen wuerde abgeschnitten,
+     * weil rechts daneben Daten stehen. Bei Produkt- und Kostenstellennamen ist das
+     * reichlich Luft - das laengste hier hat 23 Zeichen.
+     */
+    private static void breiten(Sheet blatt, int spalten) {
+        int obergrenze = MAX_SPALTENBREITE * 256;
+
+        for (int i = 0; i < spalten; i++) {
+            blatt.autoSizeColumn(i);
+            if (blatt.getColumnWidth(i) > obergrenze) {
+                blatt.setColumnWidth(i, obergrenze);
+            }
         }
     }
 
