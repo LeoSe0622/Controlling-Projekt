@@ -93,7 +93,7 @@ class StatusVonTest {
         return new Berichtsmodell(
                 "test.csv", Testdaten.STICHTAG, 1,
                 List.of(),
-                new Pruefprotokoll(List.of(befunde), List.of(), 1),
+                new Pruefprotokoll(List.of(befunde), List.of(), 1, List.of()),
                 List.of(), Map.of(),
                 null, null,
                 Warnzeileneinfluss.leer(),

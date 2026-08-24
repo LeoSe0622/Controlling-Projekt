@@ -18,8 +18,8 @@ import java.util.List;
  * preis, Fehlkalkulation), aber immer erklaerungsbeduerftig — deshalb WARNUNG, nicht FEHLER:
  * Man KANN damit rechnen, man sollte es nur sehen.
  *
- * <p>Auf den echten Daten feuert sie nie — alle vier Produkte haben eine gesunde Marge
- * (A: 30 zu 50, B: 45 zu 80, C: 12 zu 25, D: 70 zu 120).
+ * <p>Auf sauber kalkulierten Daten feuert sie nie - dort liegt jeder Preis ueber den
+ * variablen Stueckkosten, etwa 50 zu 30 oder 120 zu 70.
  */
 public class StueckdbRegel implements Zeilenregel {
 
@@ -64,5 +64,15 @@ public class StueckdbRegel implements Zeilenregel {
                             + preisFeld + " (" + preisWert + ") - Deckungsbeitrag je Stueck ist negativ"
             ));
         }
+    }
+
+    @Override
+    public String id() {
+        return ID;
+    }
+
+    @Override
+    public String bezeichnung() {
+        return "Stueck-DB negativ";
     }
 }

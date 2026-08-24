@@ -39,4 +39,14 @@ public class SpaltenanzahlRegel implements Zeilenregel {
 
         return List.of(befund);
     }
+
+    @Override
+    public String id() {
+        return ID;
+    }
+
+    @Override
+    public String bezeichnung() {
+        return "Spaltenanzahl";
+    }
 }

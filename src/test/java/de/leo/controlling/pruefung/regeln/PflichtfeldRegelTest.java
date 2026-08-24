@@ -31,7 +31,7 @@ class PflichtfeldRegelTest {
 
     @Test
     void meldetFehler_wennIstMengeLeer() {
-        // Das ist CSV-Zeile 22 aus deinen echten Daten: istMenge ist leer.
+        // Ohne istMenge laesst sich die Ist-Seite nicht rechnen - die Zeile muss raus.
         Rohzeile zeile = new Rohzeile(22, 9, "2025-04", "Produkt B", "Vertrieb Sued",
                 "600", "", "80.0", "83.03", "45.0", "3000");
 

@@ -117,6 +117,31 @@ class ExcelReportWriterTest {
         }
     }
 
+    /**
+     * Die Uebersicht "Befunde je Regel" steht unten auf dem Deckblatt - mit allen neun
+     * Regeln, auch denen ohne Befund.
+     *
+     * <p>Sie loest ein Sichtbarkeitsproblem: Auf den echten Daten meldete V09 302
+     * Warnungen und V08 neun. Die neun waren die gefaehrlichen - sie trugen die gesamte
+     * Abweichung -, gingen aber im nach Zeilennummer sortierten Datenqualitaets-Tab
+     * zwischen den 302 unter.
+     */
+    @Test
+    void deckblattZaehltDieBefundeJeRegel() throws IOException {
+        try (Workbook wb = WorkbookFactory.create(schreibeBericht().toFile())) {
+            Sheet blatt = wb.getSheet("Deckblatt");
+
+            assertTrue(enthaeltText(blatt, "Befunde je Regel"), "Ueberschrift fehlt");
+
+            assertEquals(1.0, zahlNeben(blatt, "V08"), 0.005, "ein Ausreisser");
+            assertEquals(2.0, zahlNeben(blatt, "V07"), 0.005, "beide Dublettenzeilen");
+            assertEquals(1.0, zahlNeben(blatt, "V05"), 0.005, "ein negativer Preis");
+            assertEquals(0.0, zahlNeben(blatt, "V01"), 0.005,
+                    "eine Regel ohne Befund muss trotzdem dastehen - sonst sieht eine "
+                            + "vergessene Regel aus wie eine saubere Datei");
+        }
+    }
+
     @Test
     void dbRechnungHatEineZeileJeProduktPlusSumme() throws IOException {
         try (Workbook wb = WorkbookFactory.create(schreibeBericht().toFile())) {
@@ -309,6 +334,18 @@ class ExcelReportWriterTest {
                 }
             }
         }
+    }
+
+    /** Die Zahl in Spalte B neben der Zeile, deren Spalte A mit dem Praefix beginnt. */
+    private static double zahlNeben(Sheet blatt, String praefix) {
+        for (Row row : blatt) {
+            Cell a = row.getCell(0);
+            if (a != null && a.getCellType() == CellType.STRING
+                    && a.getStringCellValue().startsWith(praefix)) {
+                return row.getCell(1).getNumericCellValue();
+            }
+        }
+        throw new AssertionError("keine Zeile beginnt mit " + praefix);
     }
 
     /** Die Zeilennummern der Befunde in der Reihenfolge, in der sie im Tab stehen. */

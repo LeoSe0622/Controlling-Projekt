@@ -9,7 +9,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * Integrationstest: hier laufen alle acht Regeln zusammen.
+ * Integrationstest: hier laufen alle Regeln gemeinsam auf denselben Daten.
  *
  * <p>Die Regel-Tests prueften jede Regel fuer sich. Dieser Test prueft, was passiert,
  * wenn sie gemeinsam auf dieselben Daten losgelassen werden — vor allem, ob der
@@ -163,5 +163,39 @@ class ValidatorTest {
                 .toList();
 
         assertEquals(List.of(5, 20, 30), nummern);
+    }
+
+    /**
+     * Die Regelzaehlung listet ALLE Regeln, auch die ohne einen einzigen Befund.
+     *
+     * <p>Nur so ist "keine Dubletten in den Daten" von "gar nicht auf Dubletten geprueft"
+     * zu unterscheiden. Wer stattdessen die gefundenen Befunde gruppiert, bekommt eine
+     * Liste, in der eine vergessene Regel genauso aussieht wie eine saubere Datei.
+     */
+    @Test
+    void zaehltJedeRegel_auchDieOhneBefund() {
+        Pruefprotokoll protokoll = validator.pruefe(List.of(
+                zeile(2, "2025-02", "Produkt C", "Vertrieb Nord", "2000", "", "25.0", "26.54")));
+
+        assertEquals(
+                List.of("V01", "V02", "V03", "V04", "V05", "V06", "V07", "V08", "V09"),
+                protokoll.regeln().stream().map(Regelzaehlung::id).toList(),
+                "alle neun Regeln, aufsteigend sortiert");
+
+        assertEquals(1, anzahlFuer(protokoll, "V02"), "das leere istMenge");
+        assertEquals(0, anzahlFuer(protokoll, "V07"),
+                "keine Dublette - und genau das muss dastehen, nicht gar nichts");
+
+        assertEquals("Dublette", protokoll.regeln().stream()
+                .filter(r -> r.id().equals("V07")).findFirst().orElseThrow().bezeichnung(),
+                "die Regel sagt selbst, was sie prueft");
+    }
+
+    private static long anzahlFuer(Pruefprotokoll protokoll, String id) {
+        return protokoll.regeln().stream()
+                .filter(r -> r.id().equals(id))
+                .findFirst()
+                .orElseThrow(() -> new AssertionError("Regel fehlt: " + id))
+                .anzahl();
     }
 }

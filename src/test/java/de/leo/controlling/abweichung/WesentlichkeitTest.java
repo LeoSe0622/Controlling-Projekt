@@ -7,8 +7,10 @@ import java.math.BigDecimal;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
- * Die Testfaelle sind die vier echten Produkte plus die Randbedingungen.
- * Schwellen: 500,00 EUR und 5 %.
+ * Die Testfaelle decken die Grenzen beider Kriterien ab: Euro-Schwelle allein gerissen,
+ * Prozent-Schwelle allein, beide zusammen - dazu die abgeleitete Schwelle.
+ *
+ * <p>Wo nicht anders angegeben, gilt die Standardeinstellung: 500,00 EUR und 5 %.
  */
 class WesentlichkeitTest {
 

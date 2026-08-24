@@ -15,7 +15,8 @@ import java.util.List;
  * <p>Betrifft die sechs Zahlenspalten. Schweigegrundsatz: Bei leeren Feldern meldet nur
  * V02 — sonst bekaeme dieselbe Zelle zwei Befunde fuer ein Problem.
  *
- * <p>Auf den echten Daten feuert sie nie — alle gefuellten Zahlenfelder sind gueltig.
+ * <p>Auf maschinell erzeugten Daten feuert sie nie - dort ist jedes gefuellte Zahlenfeld
+ * gueltig. Sie greift, wenn jemand eine CSV von Hand nachbearbeitet hat.
  */
 public class ZahlformatRegel implements Zeilenregel {
 
@@ -51,5 +52,15 @@ public class ZahlformatRegel implements Zeilenregel {
                     "Feld '" + feldname + "' ist keine gueltige Zahl"
             ));
         }
+    }
+
+    @Override
+    public String id() {
+        return ID;
+    }
+
+    @Override
+    public String bezeichnung() {
+        return "Zahlformat";
     }
 }

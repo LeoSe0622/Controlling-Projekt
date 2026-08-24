@@ -81,4 +81,14 @@ public class AusreisserRegel implements Zeilenregel {
             ));
         }
     }
+
+    @Override
+    public String id() {
+        return ID;
+    }
+
+    @Override
+    public String bezeichnung() {
+        return "Ausreisser";
+    }
 }

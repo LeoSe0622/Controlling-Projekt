@@ -97,6 +97,34 @@ public class Validator {
                 .filter(z -> !fehlerZeilen.contains(z.zeilennummer()))
                 .toList();
 
-        return new Pruefprotokoll(befunde, verwertbar, alle.size());
+        return new Pruefprotokoll(befunde, verwertbar, alle.size(), zaehlungen(befunde));
+    }
+
+    /**
+     * Zaehlt die Befunde je Regel - einschliesslich der Regeln, die nichts gefunden haben.
+     *
+     * <p>Gezaehlt wird ueber die REGISTRY, nicht ueber die Befunde. Wer nur gruppiert, was
+     * gefunden wurde, kann "keine Dubletten in den Daten" nicht von "gar nicht auf
+     * Dubletten geprueft" unterscheiden. Eine Null ist hier eine Aussage, kein fehlender
+     * Eintrag - und sie kostet nichts, weil die Registry ohnehin danebensteht.
+     */
+    private List<Regelzaehlung> zaehlungen(List<Befund> befunde) {
+        List<Regelzaehlung> ergebnis = new ArrayList<>();
+
+        for (Zeilenregel regel : zeilenregeln) {
+            ergebnis.add(new Regelzaehlung(
+                    regel.id(), regel.bezeichnung(), anzahl(befunde, regel.id())));
+        }
+        for (Datensatzregel regel : datensatzregeln) {
+            ergebnis.add(new Regelzaehlung(
+                    regel.id(), regel.bezeichnung(), anzahl(befunde, regel.id())));
+        }
+
+        ergebnis.sort(Comparator.comparing(Regelzaehlung::id));
+        return List.copyOf(ergebnis);
+    }
+
+    private static long anzahl(List<Befund> befunde, String regelId) {
+        return befunde.stream().filter(b -> b.regelId().equals(regelId)).count();
     }
 }

@@ -57,4 +57,14 @@ public class NegativwertRegel implements Zeilenregel {
             ));
         }
     }
+
+    @Override
+    public String id() {
+        return ID;
+    }
+
+    @Override
+    public String bezeichnung() {
+        return "Negativer Wert";
+    }
 }

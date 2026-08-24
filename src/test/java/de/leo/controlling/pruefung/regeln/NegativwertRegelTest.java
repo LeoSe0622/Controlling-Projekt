@@ -23,7 +23,7 @@ class NegativwertRegelTest {
 
     @Test
     void meldetFehler_beiNegativemIstPreis() {
-        // Das ist CSV-Zeile 14 aus deinen echten Daten.
+        // Ein negativer Preis ist rechenbar, aber fachlich unmoeglich.
         Rohzeile zeile = new Rohzeile(14, 9, "2025-09", "Produkt B", "Vertrieb Sued",
                 "600", "761.0", "80.0", "-77.05", "45.0", "3000");
 

@@ -87,4 +87,14 @@ public class DublettenRegel implements Datensatzregel {
 
         return zeile.monat() + " / " + zeile.produkt() + " / " + zeile.kostenstelle();
     }
+
+    @Override
+    public String id() {
+        return ID;
+    }
+
+    @Override
+    public String bezeichnung() {
+        return "Dublette";
+    }
 }

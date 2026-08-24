@@ -80,7 +80,8 @@ class CsvEinleserTest {
 
     @Test
     void behaeltLeeresFeldInDerMitte() throws IOException {
-        // Das ist der Fall aus Zeile 22 der echten Daten.
+        // Ein leeres Feld MITTEN in der Zeile: Der Einleser muss es behalten, ohne dass
+        // die Folgespalten nach links rutschen.
         List<Rohzeile> zeilen = lies(KOPF,
                 "2025-04,Produkt B,Vertrieb Sued,600,,80.0,83.03,45.0,3000");
 

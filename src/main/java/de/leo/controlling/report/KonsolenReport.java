@@ -3,6 +3,7 @@ package de.leo.controlling.report;
 import de.leo.controlling.abweichung.Abweichung;
 import de.leo.controlling.abweichung.Ampel;
 import de.leo.controlling.pruefung.Befund;
+import de.leo.controlling.pruefung.Regelzaehlung;
 import de.leo.controlling.rechnung.Produktergebnis;
 
 import java.math.BigDecimal;
@@ -62,6 +63,12 @@ public final class KonsolenReport {
                 + " von " + m.protokoll().gepruefteZeilen());
         System.out.printf("Qualitaetsquote:    %.1f %%%n",
                 m.protokoll().qualitaetsquote() * 100);
+
+        System.out.println();
+        System.out.println("Befunde je Regel:");
+        for (Regelzaehlung r : m.protokoll().regeln()) {
+            System.out.printf("  %-4s %-20s %6d%n", r.id(), r.bezeichnung(), r.anzahl());
+        }
         System.out.println();
     }
 

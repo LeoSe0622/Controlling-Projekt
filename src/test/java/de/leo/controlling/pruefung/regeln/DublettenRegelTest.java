@@ -29,7 +29,7 @@ class DublettenRegelTest {
 
     @Test
     void meldetFehler_fuerBeideZeilenEinerDublette() {
-        // Das sind CSV-Zeile 6 und 21 aus deinen echten Daten.
+        // Zwei inhaltlich gleiche Zeilen mit einer unbeteiligten dazwischen.
         List<Rohzeile> alle = List.of(
                 zeile(6, "2025-04", "Produkt A", "Vertrieb Nord"),
                 zeile(10, "2025-05", "Produkt B", "Vertrieb Sued"),

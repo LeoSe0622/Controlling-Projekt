@@ -3,6 +3,7 @@ package de.leo.controlling.report;
 import de.leo.controlling.abweichung.Abweichung;
 import de.leo.controlling.abweichung.Ampel;
 import de.leo.controlling.pruefung.Befund;
+import de.leo.controlling.pruefung.Regelzaehlung;
 import de.leo.controlling.pruefung.Schweregrad;
 import de.leo.controlling.model.Rohzeile;
 import de.leo.controlling.rechnung.Kostenstellenergebnis;
@@ -165,8 +166,38 @@ public final class ExcelReportWriter {
                             + m.brueckenDifferenz(),
                     f.fehler);
         }
+        z += 2;
+
+        befundeJeRegel(blatt, f, m, z);
 
         breiten(blatt, 2);
+    }
+
+    /**
+     * Die Uebersicht "Befunde je Regel", ganz unten auf dem Deckblatt.
+     *
+     * <p><b>Warum sie existiert:</b> Auf 1.810 Zeilen meldete V09 (Zukunftsmonat) 302
+     * Warnungen und V08 (Ausreisser) neun. Die neun waren die gefaehrlichen - sie trugen
+     * die gesamte Abweichung -, gingen aber unter: Der Datenqualitaets-Tab ist nach
+     * Zeilennummer sortiert, also liegen beide Regelarten durchmischt. Hier stehen die
+     * Zahlen untereinander und das Verhaeltnis ist auf einen Blick zu sehen.
+     *
+     * <p><b>Warum unten und nicht rechts:</b> Der Block benutzt dieselben zwei Spalten wie
+     * alles darueber. Rechts daneben waere kompakter, wuerde das Blatt aber breiter machen
+     * als den Bildschirm - und dann muss man herauszoomen, um ueberhaupt etwas zu lesen.
+     * Nach unten zu wachsen kostet nur Scrollen.
+     */
+    private void befundeJeRegel(Sheet blatt, Formate f, Berichtsmodell m, int z) {
+
+        text(blatt, z, 0, "Befunde je Regel", f.kopfzeile);
+        text(blatt, z, 1, "", f.kopfzeile);
+        z++;
+
+        for (Regelzaehlung r : m.protokoll().regeln()) {
+            text(blatt, z, 0, r.id() + "  " + r.bezeichnung(), null);
+            zahl(blatt, z, 1, BigDecimal.valueOf(r.anzahl()), null);
+            z++;
+        }
     }
 
     /**
