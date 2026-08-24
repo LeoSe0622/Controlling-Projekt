@@ -98,6 +98,16 @@ Es ist ein echtes Excel-Diagramm, kein Bild: anklickbar, umformatierbar, erweite
 Daten liest es aus der Spalte `Gesamt Abweichung` der Zeitreihe — es gibt keine zweite
 Kopie der Zahlen, die auseinanderlaufen könnte.
 
+Ganz unten steht **„Befunde je Regel"** — eine Zeile je Prüfregel, auch für die, die nichts
+gefunden haben. Eine `0` ist dort eine Aussage: Sie unterscheidet „keine Dubletten in den
+Daten" von „gar nicht auf Dubletten geprüft".
+
+Der Block löst ein Sichtbarkeitsproblem. Der Datenqualitäts-Tab ist nach Zeilennummer
+sortiert, also liegen alle Regelarten durchmischt. Auf den Testdaten meldete V09
+(Zukunftsmonat) 302 Warnungen und V08 (Ausreißer) neun — und die neun waren die
+gefährlichen, weil sie die gesamte Abweichung trugen. Untereinander sieht man das Verhältnis
+sofort.
+
 Empfohlene Lesereihenfolge: **erst das Deckblatt.** Dort steht die Qualitätsquote — man
 sollte wissen, auf wie vielen Zeilen die Zahlen beruhen, *bevor* man die Euro-Beträge liest.
 
@@ -220,6 +230,7 @@ Die Formeln und Regeln stehen im Code, jeweils im Javadoc der zuständigen Klass
 | Woher kommt die Euro-Schwelle ohne Angabe? | `Wesentlichkeit.fuer` |
 | Wie belastbar ist die Kernaussage? | `Warnzeileneinfluss` |
 | Warum zeigt das Diagramm eine Linie und nicht zwei? | `ExcelReportWriter.abweichungsdiagramm` |
+| Warum stehen Regeln mit 0 Befunden in der Übersicht? | `Regelzaehlung` |
 
 ## Bewusst nicht gebaut
 
