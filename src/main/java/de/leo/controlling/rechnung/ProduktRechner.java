@@ -58,7 +58,7 @@ public final class ProduktRechner {
      *
      * <p><b>Achtung beim Lesen des Ergebnisses:</b> Der summierte Deckungsbeitrag
      * enthaelt auch ein Feld {@code menge}. Ueber verschiedene Produkte hinweg ist
-     * das bedeutungslos - 2.000 Stueck Produkt C plus 350 Stueck Produkt D ergeben
+     * das bedeutungslos - 2.000 Stueck eines Produkts plus 350 Stueck eines anderen ergeben
      * keine sinnvolle Zahl. Nur die Geldbetraege duerfen aus dieser Summe in den
      * Bericht. Eine Datenstruktur kann technisch summierbar sein und fachlich
      * trotzdem Unsinn ergeben.

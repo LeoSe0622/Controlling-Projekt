@@ -8,7 +8,7 @@ import java.math.RoundingMode;
  * einer Produkt-Monats-Kombination.
  *
  * <p>Alle Geldbetraege sind bereits auf zwei Stellen gerundet. Das ist Absicht: Im Excel
- * stehen spaeter zwoelf Monatszeilen und eine Summenzeile, und die Summe muss der Summe
+ * stehen spaeter viele Monatszeilen und eine Summenzeile, und die Summe muss der Summe
  * der ANGEZEIGTEN Werte entsprechen. Ein Bericht, dessen Spalten sich addieren lassen,
  * ist mehr wert als zwei Nachkommastellen theoretische Genauigkeit.
  *
@@ -59,9 +59,9 @@ public record Deckungsbeitrag(
      * Break-Even-Menge: wie viele Stueck abgesetzt werden muessen, damit der
      * Deckungsbeitrag I die Fixkosten gerade deckt.
      *
-     * <p>Beantwortet die Frage "ab wann traegt sich das Produkt?". Bei Produkt B
-     * (Fixkosten 3.000, Stueck-DB 35,00) sind das 86 Stueck im Monat bei 600
-     * geplanten - komfortabel. Je naeher der Break-Even an der Planmenge liegt,
+     * <p>Beantwortet die Frage "ab wann traegt sich das Produkt?". Bei Fixkosten von
+     * 3.000 und einem Stueck-DB von 35,00 sind das 86 Stueck im Monat. Liegen davon 600
+     * in der Planung, ist das komfortabel. Je naeher der Break-Even an der Planmenge liegt,
      * desto riskanter das Produkt.
      *
      * @return {@code null}, wenn der Stueck-DB fehlt oder nicht positiv ist -

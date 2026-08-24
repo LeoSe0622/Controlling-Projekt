@@ -1,7 +1,9 @@
 package de.leo.controlling.report;
 
 import de.leo.controlling.Testdaten;
+import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
+import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
@@ -11,8 +13,11 @@ import org.junit.jupiter.api.io.TempDir;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -54,17 +59,26 @@ class ExcelReportWriterTest {
         }
     }
 
+    /**
+     * Alle Befunde, aufsteigend nach Zeilennummer - ueber beide Regelarten hinweg.
+     *
+     * <p>Zeile 5 und 18 sind die Dublette und kommen aus einer Datensatzregel, die NACH
+     * allen Zeilenregeln laeuft. Ohne die Sortierung im Validator stuenden sie am Ende,
+     * der Tab finge in der Mitte wieder von vorn an, und wer nachschlagen will, was mit
+     * Zeile 18 los ist, muesste an zwei Stellen suchen.
+     */
     @Test
-    void datenqualitaetsTabEnthaeltAlleBefunde() throws IOException {
+    void datenqualitaetsTabZeigtAlleBefundeNachZeileSortiert() throws IOException {
         try (Workbook wb = WorkbookFactory.create(schreibeBericht().toFile())) {
             Sheet blatt = wb.getSheet("Datenqualitaet");
 
             // Kopfzeile plus fuenf Befunde. getLastRowNum() ist null-basiert.
             assertEquals(5, blatt.getLastRowNum(), "Kopfzeile + 5 Befunde");
+            assertEquals(List.of(5, 9, 17, 18, 19), zeilennummern(blatt));
 
-            assertEquals(9, (int) blatt.getRow(1).getCell(0).getNumericCellValue());
-            assertEquals("istMenge", blatt.getRow(1).getCell(1).getStringCellValue());
-            assertEquals("V02", blatt.getRow(1).getCell(2).getStringCellValue());
+            Row neun = befundZuZeile(blatt, 9);
+            assertEquals("istMenge", neun.getCell(1).getStringCellValue());
+            assertEquals("V02", neun.getCell(2).getStringCellValue());
         }
     }
 
@@ -77,6 +91,27 @@ class ExcelReportWriterTest {
             assertTrue(enthaeltZahl(blatt, 249000.00), "Plan-Betriebsergebnis fehlt");
             assertTrue(enthaeltZahl(blatt, 968301.89), "Ist-Betriebsergebnis fehlt");
             assertTrue(enthaeltText(blatt, "Abstimmbruecke"), "Brueckenhinweis fehlt");
+        }
+    }
+
+    /**
+     * Das Deckblatt sagt, wie belastbar sein eigenes Betriebsergebnis ist.
+     *
+     * <p>Ohne diesen Block meldet die Kopfzahl 719.301,89 EUR ueber Plan, und niemand
+     * erfaehrt, dass eine einzige beanstandete Zeile sie traegt. Auf den echten Daten
+     * waren es neun Zeilen und 1,4 Mio EUR.
+     */
+    @Test
+    void deckblattZeigtDenEinflussDerBeanstandetenZeilen() throws IOException {
+        try (Workbook wb = WorkbookFactory.create(schreibeBericht().toFile())) {
+            Sheet blatt = wb.getSheet("Deckblatt");
+
+            assertTrue(enthaeltZahl(blatt, 728143.00),
+                    "die Abweichung der beanstandeten Zeilen fehlt");
+            assertTrue(enthaeltZahl(blatt, -8841.11),
+                    "die Abweichung OHNE diese Zeilen fehlt");
+            assertTrue(enthaeltText(blatt, "Vorzeichen"),
+                    "der Hinweis auf den Vorzeichenwechsel fehlt");
         }
     }
 
@@ -102,6 +137,54 @@ class ExcelReportWriterTest {
         }
     }
 
+    /**
+     * Die Ampel steht als Text in der Zelle, nicht nur als Farbe.
+     *
+     * <p>Eine gefaerbte, aber leere Zelle traegt ihre Information ausschliesslich im
+     * Fuellmuster. Schwarz-weiss gedruckt, fuer einen farbenblinden Leser oder nach
+     * "Speichern als CSV" ist sie eine leere Zelle.
+     */
+    @Test
+    void ampelSpalteTraegtAuchText() throws IOException {
+        try (Workbook wb = WorkbookFactory.create(schreibeBericht().toFile())) {
+            Sheet blatt = wb.getSheet("Abweichungsanalyse");
+
+            assertEquals("beobachten", blatt.getRow(1).getCell(6).getStringCellValue(),
+                    "Produkt A ist gelb");
+            assertEquals("handeln", blatt.getRow(2).getCell(6).getStringCellValue(),
+                    "Produkt B ist rot");
+            assertEquals("beobachten", blatt.getRow(3).getCell(6).getStringCellValue());
+            assertEquals("beobachten", blatt.getRow(4).getCell(6).getStringCellValue());
+        }
+    }
+
+    /**
+     * Die Zeitreihe fuehrt zwei Summenspalten, und die stimmen mit dem Deckblatt ueberein.
+     *
+     * <p>Damit ist die Zeitreihe nicht nur bequemer zu lesen, sondern auch eine Probe:
+     * Die Monatssummen muessen das Betriebsergebnis ergeben, sonst fehlt irgendwo ein
+     * Produkt-Monat.
+     */
+    @Test
+    void zeitreiheHatSummenspaltenDieAufgehen() throws IOException {
+        try (Workbook wb = WorkbookFactory.create(schreibeBericht().toFile())) {
+            Sheet blatt = wb.getSheet("Zeitreihe");
+
+            assertEquals("Gesamt Plan", blatt.getRow(0).getCell(1).getStringCellValue());
+            assertEquals("Gesamt Ist", blatt.getRow(0).getCell(2).getStringCellValue());
+
+            double plan = 0;
+            double ist = 0;
+            for (int i = 1; i <= blatt.getLastRowNum(); i++) {
+                plan += blatt.getRow(i).getCell(1).getNumericCellValue();
+                ist += blatt.getRow(i).getCell(2).getNumericCellValue();
+            }
+
+            assertEquals(249000.00, plan, 0.005, "Summe der Monate = Plan-Betriebsergebnis");
+            assertEquals(968301.89, ist, 0.005, "Summe der Monate = Ist-Betriebsergebnis");
+        }
+    }
+
     @Test
     void rohdatenTabZeigtAlleZeilenMitStatus() throws IOException {
         try (Workbook wb = WorkbookFactory.create(schreibeBericht().toFile())) {
@@ -118,26 +201,68 @@ class ExcelReportWriterTest {
     }
 
     /**
+     * Zahlen im Rohdaten-Tab sind Zahlen, kaputte Felder bleiben Text.
+     *
+     * <p>Alles unbesehen als Text zu schreiben war die urspruengliche Loesung und kostete
+     * den Tab seinen Zweck: Excel setzt auf jede dieser Zellen das Warndreieck "Zahl als
+     * Text gespeichert", und summieren oder nach Groesse sortieren geht nicht mehr -
+     * ausgerechnet dort, wo man eine Zahl aus dem Bericht nachpruefen will.
+     */
+    @Test
+    void rohdatenTabSchreibtZahlenAlsZahlen() throws IOException {
+        try (Workbook wb = WorkbookFactory.create(schreibeBericht().toFile())) {
+            Sheet blatt = wb.getSheet("Rohdaten");
+
+            Row sauber = zeileMitNummer(blatt, 2);
+            assertEquals(CellType.NUMERIC, sauber.getCell(5).getCellType(), "plan_menge");
+            assertEquals(1000.0, sauber.getCell(5).getNumericCellValue(), 0.005);
+            assertEquals(51.03, sauber.getCell(8).getNumericCellValue(), 0.005, "ist_preis");
+
+            // Zeile 9 hat ein leeres ist_menge - daraus darf keine 0 werden.
+            Cell leer = zeileMitNummer(blatt, 9).getCell(6);
+            assertNotEquals(CellType.NUMERIC, leer.getCellType(),
+                    "ein leeres Feld ist keine Zahl - eine 0 waere eine erfundene Angabe");
+        }
+    }
+
+    /** Die Zeilennummern der Befunde in der Reihenfolge, in der sie im Tab stehen. */
+    private static List<Integer> zeilennummern(Sheet blatt) {
+        List<Integer> nummern = new ArrayList<>();
+        for (int i = 1; i <= blatt.getLastRowNum(); i++) {
+            nummern.add((int) blatt.getRow(i).getCell(0).getNumericCellValue());
+        }
+        return nummern;
+    }
+
+    private static Row befundZuZeile(Sheet blatt, int csvZeile) {
+        return zeileMitNummer(blatt, csvZeile);
+    }
+
+    /**
      * Sucht die Zeile ueber ihre CSV-Zeilennummer in Spalte 0.
      *
      * <p>Nicht ueber die Position im Blatt: Die verschiebt sich um die Kopfzeile und
      * bei jeder Aenderung der Reihenfolge. Der Test soll pruefen, WAS in der Zeile
      * steht, nicht WO sie steht.
      */
-    private static String statusVonZeile(Sheet blatt, int csvZeile) {
-        for (var row : blatt) {
-            var erste = row.getCell(0);
+    private static Row zeileMitNummer(Sheet blatt, int csvZeile) {
+        for (Row row : blatt) {
+            Cell erste = row.getCell(0);
             if (erste != null && erste.getCellType() == CellType.NUMERIC
                     && (int) erste.getNumericCellValue() == csvZeile) {
-                return row.getCell(1).getStringCellValue();
+                return row;
             }
         }
-        throw new AssertionError("Zeile " + csvZeile + " fehlt im Rohdaten-Tab");
+        throw new AssertionError("Zeile " + csvZeile + " fehlt im Tab");
+    }
+
+    private static String statusVonZeile(Sheet blatt, int csvZeile) {
+        return zeileMitNummer(blatt, csvZeile).getCell(1).getStringCellValue();
     }
 
     private static boolean enthaeltZahl(Sheet blatt, double gesucht) {
-        for (var row : blatt) {
-            for (var cell : row) {
+        for (Row row : blatt) {
+            for (Cell cell : row) {
                 if (cell.getCellType() == CellType.NUMERIC
                         && Math.abs(cell.getNumericCellValue() - gesucht) < 0.005) {
                     return true;
@@ -148,8 +273,8 @@ class ExcelReportWriterTest {
     }
 
     private static boolean enthaeltText(Sheet blatt, String teil) {
-        for (var row : blatt) {
-            for (var cell : row) {
+        for (Row row : blatt) {
+            for (Cell cell : row) {
                 if (cell.getCellType() == CellType.STRING
                         && cell.getStringCellValue().contains(teil)) {
                     return true;

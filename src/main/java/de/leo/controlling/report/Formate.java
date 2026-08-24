@@ -101,4 +101,23 @@ final class Formate {
             case ROT -> fehler;
         };
     }
+
+    /**
+     * Der Text zu einer Ampelstufe.
+     *
+     * <p>Die Farbe allein reicht nicht. Eine gefaerbte, aber leere Zelle traegt ihre
+     * Information ausschliesslich im Fuellmuster: Schwarz-weiss gedruckt, von einem
+     * farbenblinden Leser oder nach "Speichern als CSV" ist sie verschwunden. Der Text
+     * steht deshalb zusaetzlich in der Zelle, nicht statt der Farbe.
+     *
+     * <p>Handlungsanweisungen statt Farbnamen: "rot" muss der Leser erst uebersetzen,
+     * "handeln" nicht.
+     */
+    static String textFuer(de.leo.controlling.abweichung.Ampel ampel) {
+        return switch (ampel) {
+            case GRUEN -> "ok";
+            case GELB -> "beobachten";
+            case ROT -> "handeln";
+        };
+    }
 }

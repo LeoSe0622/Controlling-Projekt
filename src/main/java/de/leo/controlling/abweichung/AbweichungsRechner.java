@@ -13,7 +13,7 @@ import java.util.TreeMap;
  * Zerlegt die DB-Abweichung in Preis-, Mengen-, Misch- und Fixkosteneffekt.
  *
  * <p><b>Warum je ZEILE zerlegt wird und nicht je Jahr:</b> Auf Jahresebene gibt es keinen
- * Preis. Produkt C hat elf Monatspreise; einen Jahres-Planpreis muesste man als Durchschnitt
+ * Preis. Ein Produkt hat je Monat einen; einen Jahres-Planpreis muesste man als Durchschnitt
  * bilden, und damit entstuende ein zusaetzlicher Struktureffekt (welcher Monat wie schwer
  * wiegt), der die Zerlegung verfaelscht.
  *
@@ -27,7 +27,7 @@ public final class AbweichungsRechner {
     /**
      * Zerlegt die Abweichung einer einzelnen Produkt-Monats-Zeile.
      *
-     * <p>Beispiel Produkt C, Februar (m_plan 2000, p_plan 25,00, m_ist 2233, p_ist 26,54, k 12,00):
+     * <p>Rechenbeispiel (m_plan 2000, p_plan 25,00, m_ist 2233, p_ist 26,54, k 12,00):
      * <pre>
      *   Preisabweichung  =  1,54 x 2.000 = 3.080,00
      *   Mengenabweichung =   233 x 13,00 = 3.029,00
@@ -75,7 +75,7 @@ public final class AbweichungsRechner {
     }
 
     /**
-     * Summiert die Abweichungen mehrerer Zeilen - etwa die zwoelf Monate eines Produkts.
+     * Summiert die Abweichungen mehrerer Zeilen - etwa alle Monate eines Produkts.
      * Weil jede Einzelzerlegung exakt aufgeht, gilt das auch fuer die Summe.
      */
     public Abweichung summe(List<Abweichung> teile) {

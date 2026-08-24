@@ -102,4 +102,46 @@ class WesentlichkeitTest {
         assertEquals(Ampel.GELB,
                 streng.bewerte(new BigDecimal("-716.17"), new BigDecimal("165000.00")));
     }
+
+    /**
+     * Die abgeleitete Euro-Schwelle skaliert mit dem Datensatz.
+     *
+     * <p>Der Anlass: Die feste Vorgabe von 500 EUR war an 48 Zeilen kalibriert. Auf 1.810
+     * Zeilen mit sechsstelligen Jahres-Deckungsbeitraegen reisst jede Abweichung diese
+     * Schwelle - 13 von 15 Produkten wurden gelb, und die Ampel sagte nichts mehr.
+     */
+    @Test
+    void leitetDieEuroSchwelleAusDemDatenumfangAb() {
+        Wesentlichkeit gross = Wesentlichkeit.fuer(
+                new BigDecimal("3404380.00"), new BigDecimal("0.05"));
+
+        assertEquals(new BigDecimal("8510.95"), gross.schwelleEuro());
+        assertEquals(new BigDecimal("0.05"), gross.schwelleProzent(),
+                "die Prozent-Schwelle wird unveraendert uebernommen");
+    }
+
+    /**
+     * Bei einem kleinen Plan faellt die abgeleitete Schwelle unter die Untergrenze -
+     * dann gilt die Untergrenze. Ohne sie waere die Schwelle bei einem Plan nahe null
+     * praktisch null, und jede Rundungsdifferenz wuerde gemeldet.
+     */
+    @Test
+    void haeltDieUntergrenzeVonFuenfhundert() {
+        Wesentlichkeit klein = Wesentlichkeit.fuer(
+                new BigDecimal("1000.00"), new BigDecimal("0.05"));
+
+        assertEquals(new BigDecimal("500.00"), klein.schwelleEuro());
+    }
+
+    /**
+     * Ein Unternehmen, das planmaessig Verlust macht, hat einen negativen Plan-DB-II.
+     * Ohne abs() waere die abgeleitete Schwelle negativ - und dann reisst sie JEDE
+     * Abweichung, weil ein Betrag nie kleiner als eine negative Zahl ist.
+     */
+    @Test
+    void negativerPlanErgibtDieselbeSchwelleWieDerPositive() {
+        assertEquals(
+                Wesentlichkeit.fuer(new BigDecimal("3404380.00"), new BigDecimal("0.05")),
+                Wesentlichkeit.fuer(new BigDecimal("-3404380.00"), new BigDecimal("0.05")));
+    }
 }

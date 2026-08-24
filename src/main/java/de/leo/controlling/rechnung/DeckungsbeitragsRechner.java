@@ -24,10 +24,10 @@ public final class DeckungsbeitragsRechner {
     private static final int SKALA_GELD = 2;
 
     /**
-     * Summiert mehrere Deckungsbeitraege - etwa die zwoelf Monate eines Produkts.
+     * Summiert mehrere Deckungsbeitraege - etwa alle Monate eines Produkts.
      *
      * <p>Alle sechs Werte werden addiert, auch die Fixkosten: Sie sind laut CSV ein
-     * MONATSwert, zwoelf Monate ergeben also die Jahresfixkosten. Weil die Dublettenregel
+     * MONATSwert, die Summe ueber alle Monate ergibt also die Fixkosten des Zeitraums. Weil die Dublettenregel
      * dafuer gesorgt hat, dass es je (Produkt, Monat) nur eine Zeile gibt, kann dabei
      * nichts doppelt gezaehlt werden.
      *

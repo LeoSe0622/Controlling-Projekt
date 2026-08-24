@@ -96,6 +96,7 @@ class StatusVonTest {
                 new Pruefprotokoll(List.of(befunde), List.of(), 1),
                 List.of(), Map.of(),
                 null, null,
+                Warnzeileneinfluss.leer(),
                 List.of(), List.of(),
                 Wesentlichkeit.standard());
     }

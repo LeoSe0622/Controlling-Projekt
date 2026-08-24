@@ -6,6 +6,7 @@ import java.math.BigDecimal;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -43,7 +44,7 @@ class BerichtskonfigurationTest {
                 new String[]{"daten.csv", "--kein-oeffnen", "--schwelle-eur", "1000"});
 
         assertFalse(k.oeffnen());
-        assertEquals(0, k.wesentlichkeit().schwelleEuro().compareTo(new BigDecimal("1000")));
+        assertEquals(0, k.schwelleEuro().compareTo(new BigDecimal("1000")));
     }
 
     @Test
@@ -81,12 +82,16 @@ class BerichtskonfigurationTest {
     }
 
     @Test
-    void ohneSchwellenGeltenDieVorgaben() {
+    void ohneAngabeBleibtDieEuroSchwelleOffen() {
+        // null heisst "der Benutzer hat nichts gesagt". Erst der BerichtsmodellBauer
+        // leitet die Schwelle aus dem Datenumfang ab - nur er kennt ihn. Stuende hier
+        // eine 500, waere "ausdruecklich 500" von "nichts gesagt" nicht mehr zu
+        // unterscheiden, und die Ableitung koennte nie greifen.
         Berichtskonfiguration k = Berichtskonfiguration.ausArgumenten(
                 new String[]{"daten.csv"});
 
-        assertEquals(new BigDecimal("500.00"), k.wesentlichkeit().schwelleEuro());
-        assertEquals(new BigDecimal("0.05"), k.wesentlichkeit().schwelleProzent());
+        assertNull(k.schwelleEuro());
+        assertEquals(new BigDecimal("0.05"), k.schwelleProzent());
     }
 
     @Test
@@ -96,7 +101,7 @@ class BerichtskonfigurationTest {
         Berichtskonfiguration k = Berichtskonfiguration.ausArgumenten(
                 new String[]{"daten.csv", "--schwelle-prozent", "5"});
 
-        assertEquals(0, k.wesentlichkeit().schwelleProzent()
+        assertEquals(0, k.schwelleProzent()
                 .compareTo(new BigDecimal("0.05")));
     }
 
@@ -105,7 +110,7 @@ class BerichtskonfigurationTest {
         Berichtskonfiguration k = Berichtskonfiguration.ausArgumenten(
                 new String[]{"daten.csv", "--schwelle-eur", "1000"});
 
-        assertEquals(0, k.wesentlichkeit().schwelleEuro()
+        assertEquals(0, k.schwelleEuro()
                 .compareTo(new BigDecimal("1000")));
     }
 

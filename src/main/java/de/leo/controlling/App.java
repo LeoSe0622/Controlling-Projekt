@@ -71,7 +71,8 @@ public class App {
                 konfig.eingabe().getFileName().toString(),
                 roh,
                 LocalDateTime.now(),
-                konfig.wesentlichkeit());
+                konfig.schwelleEuro(),
+                konfig.schwelleProzent());
 
         new KonsolenReport().schreibe(modell);
 

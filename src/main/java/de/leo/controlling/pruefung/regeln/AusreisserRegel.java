@@ -18,7 +18,8 @@ import java.util.List;
  * unglaubwuerdig. Die Zeile bleibt in der Rechnung und verzerrt die Kennzahlen sichtbar.
  * Genau das soll ein Controller sehen, statt eine stillschweigend geglaettete Zahl.
  *
- * <p>Auf den echten Daten feuert sie einmal: Zeile 46, istMenge = 17950 bei Plan 350.
+ * <p>Feuert typischerweise bei Tippfehlern in der Menge — eine um Groessenordnungen
+ * zu hohe Stueckzahl faellt hier sofort auf.
  */
 public class AusreisserRegel implements Zeilenregel {
 

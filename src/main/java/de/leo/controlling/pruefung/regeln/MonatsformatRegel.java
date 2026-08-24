@@ -12,7 +12,8 @@ import java.util.List;
 /**
  * V04 — monat ist nicht im Format YYYY-MM oder liegt ausserhalb 01..12.
  *
- * <p>Auf den echten Daten feuert sie nie — alle Monate sind 2025-01 bis 2025-12.
+ * <p>Feuert bei Tippfehlern im Monat ("2025-13") und bei Dateien, die ein anderes
+ * Datumsformat verwenden als YYYY-MM.
  */
 public class MonatsformatRegel implements Zeilenregel {
 

@@ -19,7 +19,7 @@ import java.util.List;
  * <p>Schweigegrundsatz: schweigt bei leeren Feldern (V02) UND bei unparsebaren (V03).
  * Diese Regel ist die dritte Stufe und setzt voraus, dass die beiden davor ihre Arbeit tun.
  *
- * <p>Auf den echten Daten feuert sie einmal: Zeile 14, istPreis = -77.05.
+ * <p>Feuert typischerweise bei Vorzeichenfehlern im Preis.
  */
 public class NegativwertRegel implements Zeilenregel {
 

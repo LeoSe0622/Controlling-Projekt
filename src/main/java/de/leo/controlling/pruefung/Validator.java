@@ -9,8 +9,11 @@ import de.leo.controlling.pruefung.regeln.PflichtfeldRegel;
 import de.leo.controlling.pruefung.regeln.SpaltenanzahlRegel;
 import de.leo.controlling.pruefung.regeln.StueckdbRegel;
 import de.leo.controlling.pruefung.regeln.ZahlformatRegel;
+import de.leo.controlling.pruefung.regeln.ZukunftsmonatRegel;
 
+import java.time.YearMonth;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -18,7 +21,7 @@ import java.util.stream.Collectors;
 /**
  * Fuehrt alle Regeln aus und fasst das Ergebnis in einem {@link Pruefprotokoll} zusammen.
  *
- * <p>Der Validator kennt keine einzige Pruefung selbst — er kennt nur zwei Listen von
+ * <p>Der Validator kennt keine einzige Pruefung selbst - er kennt nur zwei Listen von
  * Regeln und laesst sie laufen. Genau das war der Sinn der Aufteilung in Regelklassen:
  * Eine neue Regel kostet eine neue Klasse und eine Zeile in der Registry unten. Nichts
  * Bestehendes wird angefasst, und keine Methode waechst mit.
@@ -28,8 +31,16 @@ public class Validator {
     private final List<Zeilenregel> zeilenregeln;
     private final List<Datensatzregel> datensatzregeln;
 
-    /** Baut einen Validator mit allen acht Standardregeln. */
+    /** Mit dem heutigen Monat als Bezugspunkt fuer V09. */
     public Validator() {
+        this(YearMonth.now());
+    }
+
+    /**
+     * @param berichtsmonat Bezugspunkt fuer V09 - alles danach gilt als Zukunft.
+     *                      Als Parameter, damit Tests nicht vom Kalender abhaengen.
+     */
+    public Validator(YearMonth berichtsmonat) {
 
         this.zeilenregeln = List.of(
                 new SpaltenanzahlRegel(),
@@ -38,7 +49,8 @@ public class Validator {
                 new MonatsformatRegel(),
                 new NegativwertRegel(),
                 new StueckdbRegel(),
-                new AusreisserRegel()
+                new AusreisserRegel(),
+                new ZukunftsmonatRegel(berichtsmonat)
         );
 
         this.datensatzregeln = List.of(new DublettenRegel());
@@ -47,15 +59,19 @@ public class Validator {
     /**
      * Fuehrt alle Regeln aus und trennt verwertbare von unbrauchbaren Zeilen.
      *
-     * <p>Aussen die Zeilen, innen die Regeln: So kommen die Befunde nach Zeile sortiert
-     * heraus statt nach Regel - fuer den Bericht die nuetzlichere Reihenfolge.
+     * <p>Am Ende wird nach Zeilennummer sortiert, und zwar STABIL. Ohne diesen Schritt
+     * haengen die Befunde der Datensatzregeln hinten an: Der Bericht zeigt erst alle
+     * Zeilenbefunde aufsteigend, faengt dann wieder von vorn an, und wer wissen will, was
+     * mit Zeile 456 los ist, muss an zwei Stellen suchen. Weil {@code List.sort} stabil
+     * ist, bleibt innerhalb einer Zeile die Regelreihenfolge erhalten - die Ursache steht
+     * also weiterhin vor ihren Folgen.
      *
      * <p>Die Fehlerzeilen landen in einem {@code Set}, nicht in einer {@code List}: Eine
      * Zeile kann mehrere Fehler haben, und {@code contains()} ist beim Set unabhaengig
      * von der Groesse schnell.
      *
      * @param alle alle eingelesenen Rohzeilen
-     * @return Befunde und verwertbare Zeilen
+     * @return Befunde nach Zeilennummer sortiert, dazu die Zeilen ohne FEHLER
      */
     public Pruefprotokoll pruefe(List<Rohzeile> alle) {
         List<Befund> befunde = new ArrayList<>();
@@ -69,6 +85,8 @@ public class Validator {
         for (Datensatzregel regel : datensatzregeln) {
             befunde.addAll(regel.pruefe(alle));
         }
+
+        befunde.sort(Comparator.comparingInt(Befund::zeilennummer));
 
         Set<Integer> fehlerZeilen = befunde.stream()
                 .filter(b -> b.grad() == Schweregrad.FEHLER)

@@ -140,4 +140,28 @@ class ValidatorTest {
         return new Rohzeile(nr, 9, monat, produkt, kostenstelle,
                 planMenge, istMenge, planPreis, istPreis, kosten, "3000");
     }
+
+    /**
+     * Die Befunde kommen nach Zeilennummer sortiert heraus - auch ueber beide Regelarten
+     * hinweg.
+     *
+     * <p>Die Dublettenregel ist eine Datensatzregel und laeuft NACH allen Zeilenregeln.
+     * Ohne die Sortierung stuende der V02-Befund der Zeile 20 vor den V07-Befunden der
+     * Zeilen 5 und 30: Der Bericht faengt in der Mitte wieder von vorn an, und wer wissen
+     * will, was mit einer bestimmten Zeile los ist, muss an zwei Stellen suchen.
+     */
+    @Test
+    void befundeKommenNachZeilennummerSortiert() {
+        List<Rohzeile> alle = List.of(
+                zeile(5, "2025-04", "Produkt A", "Vertrieb Nord", "1000", "957.0", "50.0", "53.83"),
+                zeile(20, "2025-05", "Produkt B", "Vertrieb Sued", "600", "", "80.0", "83.03"),
+                zeile(30, "2025-04", "Produkt A", "Vertrieb Nord", "1000", "957.0", "50.0", "53.83")
+        );
+
+        List<Integer> nummern = validator.pruefe(alle).befunde().stream()
+                .map(Befund::zeilennummer)
+                .toList();
+
+        assertEquals(List.of(5, 20, 30), nummern);
+    }
 }

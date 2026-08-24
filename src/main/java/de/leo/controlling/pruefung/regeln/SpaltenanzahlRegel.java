@@ -14,7 +14,7 @@ import java.util.List;
  * deshalb braucht es diese Regel: Ohne sie waere eine Zeile mit 7 Spalten nicht mehr von
  * einer Zeile mit 9 Spalten zu unterscheiden, bei der zwei Felder leer sind.
  *
- * <p>Auf den echten Daten feuert sie nie — alle 49 Zeilen haben 9 Spalten.
+ * <p>Auf sauber erzeugten Daten feuert sie nie - dort hat jede Zeile 9 Spalten.
  */
 public class SpaltenanzahlRegel implements Zeilenregel {
 

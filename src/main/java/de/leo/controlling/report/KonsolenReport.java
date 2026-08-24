@@ -12,7 +12,7 @@ import java.time.format.DateTimeFormatter;
  * Gibt ein {@link Berichtsmodell} auf der Konsole aus.
  *
  * <p>Diese Klasse rechnet nichts. Sie entscheidet nur ueber Spaltenbreiten, Reihenfolge
- * und Formatierung — alles Fragen der Darstellung. Was WAHR ist, steht im Modell; wie es
+ * und Formatierung - alles Fragen der Darstellung. Was WAHR ist, steht im Modell; wie es
  * AUSSIEHT, steht hier.
  *
  * <p>Der ExcelReportWriter ruft dieselben Getter auf und trifft andere Entscheidungen.
@@ -35,6 +35,7 @@ public final class KonsolenReport {
         datenqualitaet(m);
         deckungsbeitraege(m);
         abweichungen(m);
+        warnzeileneinfluss(m);
         abstimmbruecke(m);
     }
 
@@ -69,7 +70,7 @@ public final class KonsolenReport {
      *
      * <p>Die Breite der Produktspalte richtet sich nach dem laengsten Namen. Eine feste
      * Breite bricht, sobald ein Name laenger ist: {@code printf} kuerzt nicht, sondern
-     * schiebt alles Folgende nach rechts — dann fluchten die Zahlenspalten nicht mehr
+     * schiebt alles Folgende nach rechts - dann fluchten die Zahlenspalten nicht mehr
      * und die Tabelle ist unlesbar.
      */
     private void deckungsbeitraege(Berichtsmodell m) {
@@ -148,6 +149,34 @@ public final class KonsolenReport {
         System.out.println();
     }
 
+    /**
+     * Wie viel der Abweichung aus beanstandeten Zeilen stammt.
+     *
+     * <p>Steht direkt unter der Summenzeile, weil genau dort die Zahl steht, die dadurch
+     * fragwuerdig wird. Wer die Tabelle liest und aufhoert, hat die wichtigste
+     * Einschraenkung dann trotzdem gesehen.
+     */
+    private void warnzeileneinfluss(Berichtsmodell m) {
+        Warnzeileneinfluss w = m.warnzeilen();
+        if (w.zeilen() == 0) {
+            return;
+        }
+
+        System.out.printf("Aus %d beanstandeten Zeilen stammen davon: %s (%s)%n",
+                w.zeilen(), geld(w.abweichung()), anteilText(m));
+        System.out.printf("Abweichung ohne diese Zeilen:            %s%n",
+                geld(m.abweichungOhneWarnzeilen()));
+
+        if (m.warnzeilenKippenDasErgebnis()) {
+            System.out.println();
+            System.out.println("ACHTUNG - ohne die beanstandeten Zeilen dreht sich das "
+                    + "Vorzeichen des Ergebnisses um.");
+            System.out.println("Die Zahlen oben sind richtig gerechnet, als Kernaussage "
+                    + "aber nicht belastbar.");
+        }
+        System.out.println();
+    }
+
     /** Meldet, ob die Zerlegung und die Deckungsbeitraege dasselbe Ergebnis liefern. */
     private void abstimmbruecke(Berichtsmodell m) {
         if (m.brueckeGehtAuf()) {
@@ -173,6 +202,16 @@ public final class KonsolenReport {
     /** Geldbetrag mit Tausenderpunkt und zwei Nachkommastellen. */
     private static String geld(BigDecimal betrag) {
         return String.format("%,.2f", betrag);
+    }
+
+    /** Der Anteil an der Gesamtabweichung - oder ein Strich, wenn es keine gibt. */
+    private static String anteilText(Berichtsmodell m) {
+        BigDecimal anteil = m.anteilDerWarnzeilen();
+        if (anteil == null) {
+            return "Gesamtabweichung ist null";
+        }
+        return String.format("%,.1f %% der Gesamtabweichung",
+                anteil.multiply(new BigDecimal("100")));
     }
 
     /**

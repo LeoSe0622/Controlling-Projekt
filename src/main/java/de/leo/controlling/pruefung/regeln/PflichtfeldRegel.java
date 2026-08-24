@@ -12,8 +12,8 @@ import java.util.List;
  * V02 — Pflichtfeld leer.
  *
  * <p>Alle neun Spalten der CSV sind Pflicht. Ein leeres Feld ist ein FEHLER: die Zeile
- * fliegt aus der Rechnung. Trifft in den echten Daten die Zeilen 22, 30 und 32
- * (jeweils {@code istMenge}).
+ * fliegt aus der Rechnung. Betroffen ist meist {@code istMenge}: Werte, die im
+ * Vorsystem nicht erfasst wurden, kommen als leeres Feld an.
  *
  * <p>Diese Regel ist die <b>erste Stufe</b> des Schweigegrundsatzes: Weil sie leere Felder
  * meldet, dürfen V03 (Zahlformat) und V05 (Negativwerte) bei leeren Feldern schweigen.

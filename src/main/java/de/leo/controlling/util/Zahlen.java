@@ -12,7 +12,7 @@ import java.math.BigDecimal;
  *
  * <p>Warum {@code BigDecimal} und nicht {@code double}: Geld muss auf den Cent stimmen.
  * {@code 0.1 + 0.2} ergibt in {@code double} nicht {@code 0.3}, und solche Fehler
- * summieren sich ueber 49 Zeilen zu einer Abstimmbruecke, die nicht aufgeht.
+ * summieren sich ueber viele Zeilen zu einer Abstimmbruecke, die nicht aufgeht.
  */
 public final class Zahlen {
 

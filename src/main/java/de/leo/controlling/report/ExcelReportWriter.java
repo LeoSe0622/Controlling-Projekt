@@ -1,12 +1,14 @@
 package de.leo.controlling.report;
 
 import de.leo.controlling.abweichung.Abweichung;
+import de.leo.controlling.abweichung.Ampel;
 import de.leo.controlling.pruefung.Befund;
 import de.leo.controlling.pruefung.Schweregrad;
 import de.leo.controlling.model.Rohzeile;
 import de.leo.controlling.rechnung.Kostenstellenergebnis;
 import de.leo.controlling.rechnung.Monatsergebnis;
 import de.leo.controlling.rechnung.Produktergebnis;
+import de.leo.controlling.util.Zahlen;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.Row;
@@ -25,7 +27,7 @@ import java.util.List;
 /**
  * Schreibt ein {@link Berichtsmodell} als Excel-Datei.
  *
- * <p>Wie der {@link KonsolenReport} rechnet diese Klasse nichts — sie liest dieselben
+ * <p>Wie der {@link KonsolenReport} rechnet diese Klasse nichts - sie liest dieselben
  * Getter und trifft nur andere Darstellungsentscheidungen. Aus {@code [!!]} wird hier
  * eine rote Zelle.
  *
@@ -68,57 +70,74 @@ public final class ExcelReportWriter {
         }
     }
 
-    /** Tab 1: Kennzahlen auf einen Blick. */
+    /**
+     * Tab 1: Kennzahlen auf einen Blick.
+     *
+     * <p>Die Zeilennummern laufen ueber einen Zaehler statt fest im Code zu stehen: Der
+     * Block zum Einfluss der beanstandeten Zeilen entfaellt, wenn es keine gibt, und alles
+     * darunter rueckt nach. Feste Indizes muesste man dann an zwei Stellen pflegen.
+     */
     private void deckblatt(XSSFWorkbook wb, Formate f, Berichtsmodell m) {
         Sheet blatt = wb.createSheet("Deckblatt");
 
-        text(blatt, 0, 0, "Controlling-Monatsbericht", f.titel);
+        int z = 0;
 
-        text(blatt, 2, 0, "Datenquelle", f.beschriftung);
-        text(blatt, 2, 1, m.quelle(), null);
-        text(blatt, 3, 0, "Erstellt am", f.beschriftung);
-        text(blatt, 3, 1, m.erstelltAm().format(ZEITSTEMPEL), null);
-        text(blatt, 4, 0, "Zeitraum", f.beschriftung);
-        text(blatt, 4, 1, m.erwarteteMonate() + " Monate", null);
+        text(blatt, z, 0, "Controlling-Monatsbericht", f.titel);
+        z += 2;
 
-        text(blatt, 6, 0, "Datenqualitaet", f.kopfzeile);
-        text(blatt, 6, 1, "", f.kopfzeile);
+        text(blatt, z, 0, "Datenquelle", f.beschriftung);
+        text(blatt, z, 1, m.quelle(), null);
+        z++;
+        text(blatt, z, 0, "Erstellt am", f.beschriftung);
+        text(blatt, z, 1, m.erstelltAm().format(ZEITSTEMPEL), null);
+        z++;
+        text(blatt, z, 0, "Zeitraum", f.beschriftung);
+        text(blatt, z, 1, m.erwarteteMonate() + " Monate", null);
+        z += 2;
 
-        text(blatt, 7, 0, "Eingelesene Zeilen", f.beschriftung);
-        zahl(blatt, 7, 1, BigDecimal.valueOf(m.alleZeilen().size()), null);
+        text(blatt, z, 0, "Datenqualitaet", f.kopfzeile);
+        text(blatt, z, 1, "", f.kopfzeile);
+        z++;
 
-        text(blatt, 8, 0, "Verwertbare Zeilen", f.beschriftung);
-        zahl(blatt, 8, 1, BigDecimal.valueOf(m.protokoll().verwertbareZeilen().size()), null);
+        text(blatt, z, 0, "Eingelesene Zeilen", f.beschriftung);
+        zahl(blatt, z, 1, BigDecimal.valueOf(m.alleZeilen().size()), null);
+        z++;
+        text(blatt, z, 0, "Verwertbare Zeilen", f.beschriftung);
+        zahl(blatt, z, 1, BigDecimal.valueOf(m.protokoll().verwertbareZeilen().size()), null);
+        z++;
+        text(blatt, z, 0, "Befunde gesamt", f.beschriftung);
+        zahl(blatt, z, 1, BigDecimal.valueOf(m.protokoll().befunde().size()), null);
+        z++;
+        text(blatt, z, 0, "davon Fehler", f.beschriftung);
+        zahl(blatt, z, 1, BigDecimal.valueOf(m.protokoll().anzahlFehler()), null);
+        z++;
+        text(blatt, z, 0, "davon Warnungen", f.beschriftung);
+        zahl(blatt, z, 1, BigDecimal.valueOf(m.protokoll().anzahlWarnungen()), null);
+        z++;
+        text(blatt, z, 0, "Qualitaetsquote", f.beschriftung);
+        zahl(blatt, z, 1, BigDecimal.valueOf(m.protokoll().qualitaetsquote()), f.prozent);
+        z += 2;
 
-        text(blatt, 9, 0, "Befunde gesamt", f.beschriftung);
-        zahl(blatt, 9, 1, BigDecimal.valueOf(m.protokoll().befunde().size()), null);
+        text(blatt, z, 0, "Betriebsergebnis", f.kopfzeile);
+        text(blatt, z, 1, "", f.kopfzeile);
+        z++;
 
-        text(blatt, 10, 0, "davon Fehler", f.beschriftung);
-        zahl(blatt, 10, 1, BigDecimal.valueOf(m.protokoll().anzahlFehler()), null);
+        text(blatt, z, 0, "Plan", f.beschriftung);
+        zahl(blatt, z, 1, m.gesamtPlan().dbZwei(), f.geld);
+        z++;
+        text(blatt, z, 0, "Ist", f.beschriftung);
+        zahl(blatt, z, 1, m.gesamtIst().dbZwei(), f.geld);
+        z++;
+        text(blatt, z, 0, "Abweichung", f.beschriftung);
+        zahl(blatt, z, 1, m.gesamtIst().dbZwei().subtract(m.gesamtPlan().dbZwei()), f.geld);
+        z += 2;
 
-        text(blatt, 11, 0, "davon Warnungen", f.beschriftung);
-        zahl(blatt, 11, 1, BigDecimal.valueOf(m.protokoll().anzahlWarnungen()), null);
-
-        text(blatt, 12, 0, "Qualitaetsquote", f.beschriftung);
-        zahl(blatt, 12, 1, BigDecimal.valueOf(m.protokoll().qualitaetsquote()), f.prozent);
-
-        text(blatt, 14, 0, "Betriebsergebnis", f.kopfzeile);
-        text(blatt, 14, 1, "", f.kopfzeile);
-
-        text(blatt, 15, 0, "Plan", f.beschriftung);
-        zahl(blatt, 15, 1, m.gesamtPlan().dbZwei(), f.geld);
-
-        text(blatt, 16, 0, "Ist", f.beschriftung);
-        zahl(blatt, 16, 1, m.gesamtIst().dbZwei(), f.geld);
-
-        text(blatt, 17, 0, "Abweichung", f.beschriftung);
-        zahl(blatt, 17, 1,
-                m.gesamtIst().dbZwei().subtract(m.gesamtPlan().dbZwei()), f.geld);
+        z = einflussDerWarnzeilen(blatt, f, m, z);
 
         if (m.brueckeGehtAuf()) {
-            text(blatt, 19, 0, "Abstimmbruecke: geht auf.", null);
+            text(blatt, z, 0, "Abstimmbruecke: geht auf.", null);
         } else {
-            text(blatt, 19, 0,
+            text(blatt, z, 0,
                     "ACHTUNG - Abstimmbruecke geht NICHT auf. Differenz: "
                             + m.brueckenDifferenz(),
                     f.fehler);
@@ -126,6 +145,62 @@ public final class ExcelReportWriter {
 
         blatt.autoSizeColumn(0);
         blatt.autoSizeColumn(1);
+    }
+
+    /**
+     * Der Block, der sagt, wie belastbar das Betriebsergebnis darueber ist.
+     *
+     * <p>Zeilen mit WARNUNG bleiben in der Rechnung - siehe {@link Warnzeileneinfluss}.
+     * Das ist richtig, macht die Kopfzahl aber angreifbar: Wenige extreme Zeilen koennen
+     * das Gesamtergebnis tragen. Wer nur die Abweichung liest, merkt das nicht. Hier steht
+     * es, direkt darunter.
+     *
+     * <p>Faellt weg, wenn es keine beanstandeten Zeilen gibt - dann gibt es nichts zu
+     * relativieren, und eine Tabelle aus lauter Nullen waere nur Laerm.
+     *
+     * @return die naechste freie Zeile
+     */
+    private int einflussDerWarnzeilen(Sheet blatt, Formate f, Berichtsmodell m, int z) {
+
+        Warnzeileneinfluss w = m.warnzeilen();
+        if (w.zeilen() == 0) {
+            return z;
+        }
+
+        text(blatt, z, 0, "Einfluss der beanstandeten Zeilen", f.kopfzeile);
+        text(blatt, z, 1, "", f.kopfzeile);
+        z++;
+
+        text(blatt, z, 0, "Zeilen mit Warnung", f.beschriftung);
+        zahl(blatt, z, 1, BigDecimal.valueOf(w.zeilen()), null);
+        z++;
+        text(blatt, z, 0, "davon Plan-DB II", f.beschriftung);
+        zahl(blatt, z, 1, w.plan().dbZwei(), f.geld);
+        z++;
+        text(blatt, z, 0, "davon Ist-DB II", f.beschriftung);
+        zahl(blatt, z, 1, w.ist().dbZwei(), f.geld);
+        z++;
+        text(blatt, z, 0, "Abweichung dieser Zeilen", f.beschriftung);
+        zahl(blatt, z, 1, w.abweichung(), f.geld);
+        z++;
+        text(blatt, z, 0, "Anteil an der Gesamtabweichung", f.beschriftung);
+        zahlWennVorhanden(blatt, z, 1, m.anteilDerWarnzeilen(), f.prozent);
+        z++;
+        text(blatt, z, 0, "Abweichung OHNE diese Zeilen", f.beschriftung);
+        zahl(blatt, z, 1, m.abweichungOhneWarnzeilen(), f.geld);
+        z++;
+
+        if (m.warnzeilenKippenDasErgebnis()) {
+            text(blatt, z, 0,
+                    "ACHTUNG - ohne die beanstandeten Zeilen dreht sich das Vorzeichen "
+                            + "des Ergebnisses um. Die Zahlen oben sind richtig gerechnet, "
+                            + "aber als Kernaussage nicht belastbar. Welche Zeilen das "
+                            + "sind, steht im Tab Datenqualitaet.",
+                    f.fehler);
+            z++;
+        }
+
+        return z + 1;
     }
 
     /** Tab 2: alle Befunde der Validierung. */
@@ -158,7 +233,6 @@ public final class ExcelReportWriter {
         }
     }
 
-    /**
     /**
      * Tab 3: Deckungsbeitragsrechnung je Produkt.
      *
@@ -212,6 +286,10 @@ public final class ExcelReportWriter {
             zeile++;
         }
 
+        // Die Summenzeile laesst "Monate", "Menge Plan" und "Menge Ist" bewusst leer:
+        // Stueckzahlen verschiedener Produkte zu addieren ergibt keine Menge. Der
+        // Deckungsbeitrag traegt zwar eine summierte menge, aber nur die Geldbetraege
+        // duerfen aus dieser Summe in den Bericht - siehe ProduktRechner.gesamtPlan.
         text(blatt, zeile, 0, "GESAMT", f.beschriftung);
         zahl(blatt, zeile, 4, m.gesamtPlan().umsatz(), f.geld);
         zahl(blatt, zeile, 5, m.gesamtIst().umsatz(), f.geld);
@@ -256,7 +334,10 @@ public final class ExcelReportWriter {
             zahl(blatt, zeile, 4, a.fixkostenabweichung(), f.geld);
             zahl(blatt, zeile, 5, a.gesamt(), f.geld);
 
-            text(blatt, zeile, 6, "", f.fuerAmpel(m.ampelFuer(e)));
+            // Farbe UND Text: eine gefaerbte leere Zelle ist im Schwarz-Weiss-Ausdruck
+            // und fuer farbenblinde Leser eine leere Zelle.
+            Ampel ampel = m.ampelFuer(e);
+            text(blatt, zeile, 6, Formate.textFuer(ampel), f.fuerAmpel(ampel));
             zeile++;
         }
 
@@ -351,6 +432,10 @@ public final class ExcelReportWriter {
      * soll man MARKIEREN und daraus mit zwei Klicks ein Liniendiagramm machen koennen -
      * dafuer braucht es das breite Format.
      *
+     * <p>Die beiden Summenspalten stehen VORN, direkt neben dem Monat: Das ist die Kurve,
+     * die man zuerst sehen will, und so laesst sie sich markieren, ohne durch dreissig
+     * Produktspalten zu scrollen.
+     *
      * <p>Das Layout folgt dem Zweck, nicht einer Regel.
      */
     private void zeitreihe(XSSFWorkbook wb, Formate f, Berichtsmodell m) {
@@ -359,9 +444,11 @@ public final class ExcelReportWriter {
         List<Produktergebnis> produkte = m.produkte();
 
         text(blatt, 0, 0, "Monat", f.kopfzeile);
+        text(blatt, 0, 1, "Gesamt Plan", f.kopfzeile);
+        text(blatt, 0, 2, "Gesamt Ist", f.kopfzeile);
         for (int p = 0; p < produkte.size(); p++) {
-            text(blatt, 0, 1 + p * 2, produkte.get(p).produkt() + " Plan", f.kopfzeile);
-            text(blatt, 0, 2 + p * 2, produkte.get(p).produkt() + " Ist", f.kopfzeile);
+            text(blatt, 0, 3 + p * 2, produkte.get(p).produkt() + " Plan", f.kopfzeile);
+            text(blatt, 0, 4 + p * 2, produkte.get(p).produkt() + " Ist", f.kopfzeile);
         }
 
         List<YearMonth> monate = m.zeitreihe().stream()
@@ -374,6 +461,9 @@ public final class ExcelReportWriter {
             YearMonth monat = monate.get(z);
             text(blatt, z + 1, 0, monat.toString(), null);
 
+            BigDecimal summePlan = BigDecimal.ZERO.setScale(2);
+            BigDecimal summeIst = BigDecimal.ZERO.setScale(2);
+
             for (int p = 0; p < produkte.size(); p++) {
                 String produkt = produkte.get(p).produkt();
 
@@ -383,14 +473,19 @@ public final class ExcelReportWriter {
                         .orElse(null);
 
                 if (treffer != null) {
-                    zahl(blatt, z + 1, 1 + p * 2, treffer.plan().dbZwei(), f.geld);
-                    zahl(blatt, z + 1, 2 + p * 2, treffer.ist().dbZwei(), f.geld);
+                    summePlan = summePlan.add(treffer.plan().dbZwei());
+                    summeIst = summeIst.add(treffer.ist().dbZwei());
+                    zahl(blatt, z + 1, 3 + p * 2, treffer.plan().dbZwei(), f.geld);
+                    zahl(blatt, z + 1, 4 + p * 2, treffer.ist().dbZwei(), f.geld);
                 }
             }
+
+            zahl(blatt, z + 1, 1, summePlan, f.geld);
+            zahl(blatt, z + 1, 2, summeIst, f.geld);
         }
 
-        blatt.createFreezePane(1, 1);
-        for (int i = 0; i <= produkte.size() * 2; i++) {
+        blatt.createFreezePane(3, 1);
+        for (int i = 0; i <= 2 + produkte.size() * 2; i++) {
             blatt.autoSizeColumn(i);
         }
     }
@@ -437,7 +532,7 @@ public final class ExcelReportWriter {
     /**
      * Tab 8: alle eingelesenen Zeilen mit Statusspalte - fuer die Nachvollziehbarkeit.
      *
-     * <p>Hier steht, was TATSAECHLICH in der Datei stand: alle 49 Zeilen, auch die
+     * <p>Hier steht, was TATSAECHLICH in der Datei stand: jede eingelesene Zeile, auch die
      * aussortierten. Wer eine Zahl im Bericht anzweifelt, findet hier die Quelle.
      */
     private void rohdaten(XSSFWorkbook wb, Formate f, Berichtsmodell m) {
@@ -475,12 +570,12 @@ public final class ExcelReportWriter {
             text(blatt, zeile, 2, z.monat(), stil);
             text(blatt, zeile, 3, z.produkt(), stil);
             text(blatt, zeile, 4, z.kostenstelle(), stil);
-            text(blatt, zeile, 5, z.planMenge(), stil);
-            text(blatt, zeile, 6, z.istMenge(), stil);
-            text(blatt, zeile, 7, z.planPreis(), stil);
-            text(blatt, zeile, 8, z.istPreis(), stil);
-            text(blatt, zeile, 9, z.variableStueckkosten(), stil);
-            text(blatt, zeile, 10, z.fixkostenProdukt(), stil);
+            rohwert(blatt, zeile, 5, z.planMenge(), stil);
+            rohwert(blatt, zeile, 6, z.istMenge(), stil);
+            rohwert(blatt, zeile, 7, z.planPreis(), stil);
+            rohwert(blatt, zeile, 8, z.istPreis(), stil);
+            rohwert(blatt, zeile, 9, z.variableStueckkosten(), stil);
+            rohwert(blatt, zeile, 10, z.fixkostenProdukt(), stil);
             zeile++;
         }
 
@@ -504,7 +599,7 @@ public final class ExcelReportWriter {
      *
      * <p>{@code doubleValue()} ist hier unbedenklich: Excel speichert Zahlen ohnehin
      * als double, und unsere BigDecimal-Werte sind bereits auf zwei Stellen gerundet.
-     * Gerechnet wurde exakt — der double entsteht erst im letzten Schritt, bei der
+     * Gerechnet wurde exakt - der double entsteht erst im letzten Schritt, bei der
      * Darstellung.
      */
     private static void zahl(Sheet blatt, int zeile, int spalte, BigDecimal wert, CellStyle stil) {
@@ -512,6 +607,27 @@ public final class ExcelReportWriter {
         zelle.setCellValue(wert.doubleValue());
         if (stil != null) {
             zelle.setCellStyle(stil);
+        }
+    }
+
+    /**
+     * Schreibt einen Rohwert aus der CSV - als Zahl, wenn es eine ist, sonst als Text.
+     *
+     * <p>Alles unbesehen als Text zu schreiben waere die bequemere Wahl und war die
+     * urspruengliche. Sie kostet den Tab aber seinen Zweck: Excel setzt bei ueber
+     * zehntausend Zellen das Warndreieck "Zahl als Text gespeichert", und summieren,
+     * sortieren oder nach Groesse filtern geht nicht mehr. Ausgerechnet im Tab, den man
+     * aufschlaegt, um eine Zahl im Bericht nachzupruefen.
+     *
+     * <p>Kaputte Felder bleiben Text - und damit auf den ersten Blick als kaputt
+     * erkennbar. Genau das war der Sinn der Sache.
+     */
+    private static void rohwert(Sheet blatt, int zeile, int spalte, String wert, CellStyle stil) {
+        BigDecimal zahl = Zahlen.parse(wert);
+        if (zahl != null) {
+            zahl(blatt, zeile, spalte, zahl, stil);
+        } else {
+            text(blatt, zeile, spalte, wert, stil);
         }
     }
 

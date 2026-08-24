@@ -13,7 +13,7 @@ import java.util.List;
  * V03 — ein Zahlenfeld enthaelt keine gueltige Zahl.
  *
  * <p>Betrifft die sechs Zahlenspalten. Schweigegrundsatz: Bei leeren Feldern meldet nur
- * V02 — sonst bekaeme Zeile 22 zwei Befunde fuer dasselbe Problem.
+ * V02 — sonst bekaeme dieselbe Zelle zwei Befunde fuer ein Problem.
  *
  * <p>Auf den echten Daten feuert sie nie — alle gefuellten Zahlenfelder sind gueltig.
  */

@@ -18,6 +18,18 @@ import java.util.List;
  *
  * <p>Sie stürzt bei keiner Zeile ab. Zeilen mit zu wenig Spalten werden mit leeren
  * Feldern aufgefüllt, statt eine {@code ArrayIndexOutOfBoundsException} zu werfen.
+ *
+ * <p><b>Bekannte Grenze:</b> Der Parser trennt an jedem Komma und kennt keine
+ * Anfuehrungszeichen. Ein Feld wie {@code "Monitor 27\", schwarz"} wuerde die
+ * Folgespalten verschieben - Regel V01 meldet dann eine falsche Spaltenzahl statt
+ * des eigentlichen Problems.
+ *
+ * <p>Das ist eine bewusste Entscheidung, kein Versehen: Die Behandlung von
+ * Anfuehrungszeichen samt verdoppelten Zeichen und eingebetteten Zeilenumbruechen
+ * ist deutlich mehr Code als der gesamte uebrige Einleser. Solange die Datenquelle
+ * keine Kommas in Textfeldern liefert, waere das Aufwand ohne Nutzen. Kommt eine
+ * solche Quelle dazu, gehoert hier eine CSV-Bibliothek her - nicht ein
+ * selbstgebauter Zustandsautomat.
  */
 public class CsvEinleser {
 

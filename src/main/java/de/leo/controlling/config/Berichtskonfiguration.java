@@ -1,29 +1,33 @@
 package de.leo.controlling.config;
 
-import de.leo.controlling.abweichung.Wesentlichkeit;
-
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.nio.file.Path;
 
 /**
- * Alles, was der Aufrufer entscheiden darf — aus den Kommandozeilenargumenten gelesen.
+ * Alles, was der Aufrufer entscheiden darf - aus den Kommandozeilenargumenten gelesen.
  *
  * <p>Diese Klasse trennt zwei Dinge, die leicht verschwimmen: WAS das Programm tun soll
  * (steht hier) und WIE es das tut (steht in den Modulen). Sie kennt weder CSV noch Excel,
  * nur Pfade und Schwellen.
  *
- * @param eingabe        die zu lesende CSV
- * @param ausgabe        die zu schreibende .xlsx
- * @param wesentlichkeit die Schwellen fuer die Ampel
- * @param oeffnen        ob der fertige Bericht im Standardprogramm geoeffnet wird.
- *                       Fuer Menschen sinnvoll, fuer Automatisierung nicht - ein
- *                       Skript, das nachts laeuft, soll kein Excel aufmachen.
+ * @param eingabe         die zu lesende CSV
+ * @param ausgabe         die zu schreibende .xlsx
+ * @param schwelleEuro    absolute Ampel-Schwelle - {@code null}, wenn der Benutzer keine
+ *                        angegeben hat. Dann leitet der BerichtsmodellBauer sie aus dem
+ *                        Datenumfang ab; nur er kennt ihn. Hier eine Vorgabe einzusetzen
+ *                        wuerde diese Information vernichten: "500" und "nichts gesagt"
+ *                        waeren danach nicht mehr unterscheidbar.
+ * @param schwelleProzent relative Ampel-Schwelle als Anteil (0.05 = 5 %)
+ * @param oeffnen         ob der fertige Bericht im Standardprogramm geoeffnet wird.
+ *                        Fuer Menschen sinnvoll, fuer Automatisierung nicht - ein
+ *                        Skript, das nachts laeuft, soll kein Excel aufmachen.
  */
 public record Berichtskonfiguration(
         Path eingabe,
         Path ausgabe,
-        Wesentlichkeit wesentlichkeit,
+        BigDecimal schwelleEuro,
+        BigDecimal schwelleProzent,
         boolean oeffnen
 ) {
 
@@ -38,7 +42,8 @@ public record Berichtskonfiguration(
             Optionen:
               --input <pfad>              die einzulesende CSV (Pflicht)
               --output <pfad>             Zieldatei; ohne Angabe neben der Eingabe
-              --schwelle-eur <betrag>     Ampel-Schwelle in Euro (Vorgabe: 500)
+              --schwelle-eur <betrag>     Ampel-Schwelle in Euro. Ohne Angabe abgeleitet:
+                                          0,25 % des Plan-Ergebnisses, mindestens 500
               --schwelle-prozent <zahl>   Ampel-Schwelle in Prozent (Vorgabe: 5)
               --kein-oeffnen              Bericht nicht automatisch oeffnen
               --help                      diese Hilfe
@@ -66,14 +71,14 @@ public record Berichtskonfiguration(
      * verschlucken.
      *
      * @throws IllegalArgumentException bei unbekannten Optionen, fehlenden Werten oder
-     *                                  unbrauchbaren Zahlen — die Meldung ist fuer den
+     *                                  unbrauchbaren Zahlen - die Meldung ist fuer den
      *                                  BENUTZER gedacht, nicht fuer den Entwickler
      */
     public static Berichtskonfiguration ausArgumenten(String[] args) {
 
         Path eingabe = null;
         Path ausgabe = null;
-        BigDecimal schwelleEuro = new BigDecimal("500.00");
+        BigDecimal schwelleEuro = null;
         BigDecimal schwelleProzent = new BigDecimal("0.05");
 
         boolean oeffnen = true;
@@ -127,7 +132,7 @@ public record Berichtskonfiguration(
         }
 
         return new Berichtskonfiguration(eingabe, ausgabe,
-                new Wesentlichkeit(schwelleEuro, schwelleProzent), oeffnen);
+                schwelleEuro, schwelleProzent, oeffnen);
     }
 
     /**
@@ -149,7 +154,7 @@ public record Berichtskonfiguration(
     }
 
     /**
-     * Holt den Wert NACH einer Option — oder wirft, wenn keiner da ist.
+     * Holt den Wert NACH einer Option - oder wirft, wenn keiner da ist.
      *
      * <p>{@code --input} am Ende der Zeile ohne Pfad dahinter ist ein haeufiger Tippfehler.
      * Ohne diese Pruefung gibt es eine ArrayIndexOutOfBoundsException, und der Benutzer
@@ -176,7 +181,7 @@ public record Berichtskonfiguration(
      * Liest einen Zahlenwert nach einer Option.
      *
      * <p>Bewusst NICHT {@code Zahlen.parse()}: Das liefert bei Unsinn ein {@code null} und
-     * schweigt. In der Validierung ist das richtig — dort sind kaputte Werte erwartete
+     * schweigt. In der Validierung ist das richtig - dort sind kaputte Werte erwartete
      * DATEN, ueber die berichtet wird. Hier sind es BENUTZEREINGABEN, und ein Tippfehler
      * in {@code --schwelle-eur abc} darf nicht stillschweigend die Vorgabe stehen lassen.
      */

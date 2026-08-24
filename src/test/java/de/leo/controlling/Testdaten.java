@@ -33,6 +33,10 @@ import java.util.List;
  *
  * <p>Daraus folgt: 18 Rohzeilen, 5 Befunde, 4 Fehlerzeilen, 14 verwertbare Zeilen,
  * Qualitaetsquote 77,8 %.
+ *
+ * <p>V09 (Zukunftsmonat) schweigt hier: Alle Monate liegen im ersten Quartal 2025 und
+ * damit vor dem {@link #STICHTAG}. Wer den Stichtag zurueckdatiert, loest zusaetzliche
+ * Warnungen aus und bringt die Zahlen oben zum Kippen.
  */
 public final class Testdaten {
 

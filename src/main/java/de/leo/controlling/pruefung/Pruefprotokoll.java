@@ -12,7 +12,7 @@ import java.util.List;
  * Arbeitsgrundlage fuer die Deckungsbeitragsrechnung.
  *
  * <p>Die Trennlinie ist der Schweregrad: Eine Zeile mit FEHLER fliegt raus, eine Zeile mit
- * WARNUNG bleibt drin. Zeile 46 (der Ausreisser mit 17950 statt 350) wird also mitgerechnet
+ * WARNUNG bleibt drin. Ein Ausreisser wird also mitgerechnet
  * und verzerrt die Kennzahlen sichtbar — das ist gewollt.
  *
  * @param befunde           alle Befunde, in der Reihenfolge, in der sie gefunden wurden
@@ -37,7 +37,7 @@ public record Pruefprotokoll(
 
     /**
      * Anteil der verwertbaren Zeilen, zwischen 0.0 und 1.0.
-     * Bei 43 von 49 Zeilen also 0.878.
+     * Bei 43 verwertbaren von 49 gepruefte Zeilen also 0,878.
      */
     public double qualitaetsquote() {
 

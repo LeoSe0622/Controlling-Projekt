@@ -18,11 +18,10 @@ import java.util.stream.Collectors;
  * das Programm nicht wissen. Wuerde man eine behalten, waere die Wahl willkuerlich.
  *
  * <p>Warum das mehr ist als Ordnungsliebe: Die fixkosten_produkt stehen auf JEDER Zeile.
- * Produkt A hat wegen der Dublette 13 Zeilen statt 12 — wer die Fixkosten zeilenweise
+ * Ein Produkt mit einer Dublette hat eine Monatszeile zu viel — wer die Fixkosten zeilenweise
  * aufsummiert, bekommt 65.000 statt 60.000. Plausibel falsch, und deshalb gefaehrlich.
  *
- * <p>Auf den echten Daten feuert sie zweimal: Zeile 6 und Zeile 21
- * (beide 2025-04, Produkt A, Vertrieb Nord).
+ * <p>Sie meldet immer BEIDE beteiligten Zeilen, nie nur die zweite.
  */
 public class DublettenRegel implements Datensatzregel {
 
@@ -54,7 +53,7 @@ public class DublettenRegel implements Datensatzregel {
                         "(ganze Zeile)",
                         ID,
                         Schweregrad.FEHLER,
-                        schluessel(z),
+                        beschriftung(z),
                         "Dublette: gleiche Kombination wie Zeile " + andere
                 ));
             }
@@ -67,11 +66,25 @@ public class DublettenRegel implements Datensatzregel {
      * Der fachliche Schluessel einer Zeile.
      *
      * <p>Warum nicht einfach {@code zeile.equals(andere)}: Die {@code zeilennummer()} ist
-     * Teil des Records, also vergleicht das generierte equals() sie mit. Zeile 6 und
-     * Zeile 21 sind inhaltlich identisch, aber {@code equals} sagt trotzdem false.
+     * Teil des Records, also vergleicht das generierte equals() sie mit. Zwei inhaltlich
+     * identische Zeilen aus verschiedenen Dateizeilen sind fuer {@code equals} verschieden.
      */
     private static String schluessel(Rohzeile zeile) {
 
         return zeile.monat() + "|" + zeile.produkt() + "|" + zeile.kostenstelle();
+    }
+
+    /**
+     * Dieselbe Kombination, aber fuer Menschen.
+     *
+     * <p>Getrennt von {@link #schluessel}, weil beide verschiedene Zwecke haben: Der
+     * Schluessel muss eindeutig sein, die Beschriftung lesbar. Wer beides in eine Methode
+     * legt, bekommt am Ende ein Trennzeichen im Bericht, das nur der Gruppierung dient -
+     * das Pipe-Zeichen ist ein Implementierungsdetail und hat in einer Berichtsspalte
+     * nichts zu suchen.
+     */
+    private static String beschriftung(Rohzeile zeile) {
+
+        return zeile.monat() + " / " + zeile.produkt() + " / " + zeile.kostenstelle();
     }
 }

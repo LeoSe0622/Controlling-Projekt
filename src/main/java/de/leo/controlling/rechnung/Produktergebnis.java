@@ -7,14 +7,14 @@ import java.math.BigDecimal;
  * die es in den verwertbaren Daten gab.
  *
  * <p><b>Warum {@code monate} eine eigene Komponente ist</b> — und keine Nebensache:
- * Nach der Validierung hat Produkt B nur 9 von 12 Monaten (zweimal leere istMenge,
- * einmal negativer Preis), Produkt A nur 11 (die Dublette), Produkt D alle 12.
+ * Nach der Validierung fehlen einzelnen Produkten Monate — je nachdem, wie viele ihrer
+ * Zeilen als FEHLER aussortiert wurden. Andere Produkte sind vollstaendig.
  *
- * <p>Ein Jahres-DB-II ohne diese Zahl ist irrefuehrend: Produkt B sieht neben Produkt D
- * systematisch schlechter aus, nicht weil es schlechter laeuft, sondern weil drei Monate
- * fehlen. Wer die Zahlen nebeneinander legt und die Fussnote nicht hat, zieht einen
- * falschen Schluss. Deshalb gehoert die Monatsabdeckung als eigene Spalte in den Bericht,
- * gleichberechtigt neben die Euro-Betraege.
+ * <p>Ein Jahres-DB-II ohne diese Zahl ist irrefuehrend: Ein Produkt mit neun Monaten sieht
+ * neben einem mit zwoelf systematisch schlechter aus — nicht weil es schlechter laeuft,
+ * sondern weil Monate fehlen. Wer die Zahlen nebeneinander legt und die Fussnote nicht hat,
+ * zieht einen falschen Schluss. Deshalb gehoert die Monatsabdeckung als eigene Spalte in
+ * den Bericht, gleichberechtigt neben die Euro-Betraege.
  */
 public record Produktergebnis(
         String produkt,
