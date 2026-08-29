@@ -6,7 +6,7 @@ Das fachliche Konzept — Deckungsbeitragsstufen, Break-even, Abweichungslogik u
 
 Erzeugt aus einer Rohdaten-CSV (Plan/Ist je Produkt und Monat) einen Excel-Monatsbericht —
 mit Datenqualitätsprüfung, Deckungsbeitragsrechnung und Abweichungsanalyse.
-(In diesem Projekt wurde KI als überprüfer und Planer verwendet der auch Code geschrieben hat)
+
 ```
 CSV rein → Validierung → Deckungsbeitragsrechnung → Abweichungsanalyse → Excel raus
 ```
