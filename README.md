@@ -1,3 +1,7 @@
+# Entstehung
+
+Das fachliche Konzept — Deckungsbeitragsstufen, Break-even, Abweichungslogik und der Aufbau des Berichts — stammt von mir und ist gegen eigene Rechenbeispiele geprüft. Planung und Implementierung entstanden KI-unterstützt.
+
 # Controlling-Projekt
 
 Erzeugt aus einer Rohdaten-CSV (Plan/Ist je Produkt und Monat) einen Excel-Monatsbericht —
